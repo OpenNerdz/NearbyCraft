@@ -1,0 +1,7 @@
+<configs>
+  <append xpath="/xui">
+    <window_group name="nearbycraft_storage_terminal" controller="NearbyCraft.XUiC_StorageTerminalWindowGroup, NearbyCraft" close_compass_on_open="true" defaultselected="nearbyCraftTerminalSearch">
+      <window name="nearbyCraftStorageTerminal" />
+    </window_group>
+  </append>
+</configs>

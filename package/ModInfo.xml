@@ -1,0 +1,10 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<xml>
+  <Name value="NearbyCraft" />
+  <DisplayName value="Nearby Craft" />
+  <Description value="Craft from nearby storage and manage connected chests through a searchable Storage Network Console." />
+  <Author value="bradhosk" />
+  <Version value="1.2.0" />
+  <Website value="" />
+  <SkipWithAntiCheat value="true" />
+</xml>

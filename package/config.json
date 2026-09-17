@@ -1,0 +1,15 @@
+{
+  "Enabled": true,
+  "Range": 15,
+  "CacheMilliseconds": 250,
+  "IncludePlayerStorage": true,
+  "IncludeWorkstationOutputs": true,
+  "IncludeCollectors": true,
+  "IncludeVehicles": true,
+  "IncludeDrones": true,
+  "RespectLockedSlots": true,
+  "TerminalRange": 15,
+  "TerminalSort": "Name",
+  "TerminalAutoFocusSearch": true,
+  "DebugLogging": false
+}

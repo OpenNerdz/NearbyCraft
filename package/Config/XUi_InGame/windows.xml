@@ -1,0 +1,53 @@
+<configs>
+  <append xpath="/windows/window[@name='craftingInfoPanel']/rect[@name='contentCraftingInfo']/rect[@name='searchControls']">
+    <rect name="nearbyCraftControl" pos="244,0" width="202" height="43">
+      <label depth="4" name="nearbyCraftStatus" pos="0,-8" width="155" height="30" text="{nearbycraft_status}" font_size="22" justify="right" color="{nearbycraft_status_color}" />
+      <button depth="4" name="nearbyCraftToggle" style="icon30px, press, hover" pos="179,-22" sprite="ui_game_symbol_loot_sack" pivot="center" sound="[paging_click]" defaultcolor="[disabledLabelColor]" selectedcolor="[green]" selected="{nearbycraft_enabled}" tooltip="{nearbycraft_tooltip}" />
+    </rect>
+  </append>
+
+  <append xpath="/windows">
+    <window name="nearbyCraftStorageTerminal" width="606" height="548" panel="Left" cursor_area="true">
+      <rect name="header" height="43" depth="1">
+        <headerbg />
+        <sprite depth="3" name="windowIcon" style="icon32px" pivot="center" pos="21,-21" sprite="ui_game_symbol_computer" />
+        <label depth="3" name="windowName" pos="42,-6" width="360" height="32" text="STORAGE NETWORK CONSOLE" font_size="28" />
+        <label depth="3" name="resultCount" pos="484,-9" width="106" height="28" text="{terminal_result_count} STACKS" font_size="20" justify="right" color="[lightGrey]" />
+      </rect>
+
+      <rect name="searchControls" pos="0,-46" width="606" height="50" depth="2">
+        <sprite depth="1" name="toolbarBackground" color="[darkGrey]" type="sliced" width="606" height="49" />
+        <sprite depth="8" name="toolbarBorder" sprite="menu_empty3px" pos="0,1" width="606" height="50" color="[black]" type="sliced" fillcenter="false" />
+
+        <sprite depth="4" name="searchIcon" style="icon30px" pos="18,-24" sprite="ui_game_symbol_search" pivot="center" />
+        <textfield depth="5" pos="39,-9" width="185" height="30" name="nearbyCraftTerminalSearch" search_field="true" clear_button="true" character_limit="64" />
+
+        <label depth="4" pos="229,-14" width="91" height="28" text="AUTO FOCUS" font_size="15" justify="right" color="{terminal_autofocus_color}" />
+        <button depth="5" name="nearbyCraftTerminalAutoFocus" pos="339,-24" sprite="ui_game_symbol_search" style="icon30px, press, hover" pivot="center" selected="{terminal_autofocus_enabled}" defaultcolor="[disabledLabelColor]" selectedcolor="[green]" tooltip="{terminal_autofocus_tooltip}" sound="[paging_click]" />
+        <label depth="4" pos="357,-13" width="70" height="28" text="{terminal_sort}" font_size="17" justify="right" color="[lightGrey]" />
+        <button depth="5" name="nearbyCraftTerminalSort" pos="447,-24" sprite="ui_game_symbol_sort" style="icon30px, press, hover" pivot="center" tooltip="Change and save sorting" sound="[paging_click]" />
+        <button depth="5" name="nearbyCraftTerminalDeposit" pos="499,-24" sprite="ui_game_symbol_store_all_down" style="icon30px, press, hover" pivot="center" tooltip="Deposit all unlocked backpack items" sound="[paging_click]" />
+        <button depth="5" name="nearbyCraftTerminalRefresh" pos="558,-24" sprite="ui_game_symbol_computer" style="icon30px, press, hover" pivot="center" tooltip="Rescan connected storage" sound="[paging_click]" />
+      </rect>
+
+      <rect name="nearbyCraftTerminalScrollArea" pos="0,-99" height="402" depth="0" on_scroll="true">
+        <sprite depth="8" name="backgroundMain" sprite="menu_empty3px" width="606" height="402" color="[black]" type="sliced" fillcenter="false" on_press="true" snap="false" gamepad_selectable="false" />
+        <grid depth="10" name="nearbyCraftTerminalGrid" rows="6" cols="9" pos="3,-3" cell_width="65" cell_height="65" repeat_content="true" controller="NearbyCraft.XUiC_StorageTerminalGrid, NearbyCraft">
+          <item_stack name="0" cell_size="65" controller="NearbyCraft.XUiC_StorageTerminalItemStack, NearbyCraft" />
+        </grid>
+        <scrollbar name="nearbyCraftTerminalScrollbar" pos="590,-3" width="16" height="390" depth="12">
+          <sprite name="thumb" depth="1" pos="4,-4" width="8" height="382" sprite="menu_empty" type="sliced" color="179,11,11,255" fillcenter="true" on_press="true" on_scroll="true" gamepad_selectable="false" snap="false" />
+          <sprite name="background" depth="0" sprite="menu_empty2px" type="sliced" color="[darkGrey]" fillcenter="false" on_press="true" on_scroll="true" gamepad_selectable="false" snap="false" />
+        </scrollbar>
+      </rect>
+
+      <rect name="footer" pos="0,-504" width="606" height="44" depth="2">
+        <sprite depth="1" color="[darkGrey]" type="sliced" width="606" height="44" />
+        <label depth="3" name="networkStatus" pos="12,-10" width="420" height="25" text="{terminal_status}" font_size="18" color="[lightGrey]" />
+        <button depth="4" name="nearbyCraftTerminalScrollUp" pos="450,-22" sprite="ui_game_symbol_arrow_left" rotation="90" style="icon30px, press, hover" pivot="center" enabled="{terminal_can_scroll_up}" disabledcolor="[darkGrey]" tooltip="Scroll up one row" sound="[paging_click]" />
+        <label depth="3" name="scrollRange" pos="466,-10" width="105" height="25" text="{terminal_scroll_range}" font_size="16" justify="center" />
+        <button depth="4" name="nearbyCraftTerminalScrollDown" pos="590,-22" sprite="ui_game_symbol_arrow_left" rotation="-90" style="icon30px, press, hover" pivot="center" enabled="{terminal_can_scroll_down}" disabledcolor="[darkGrey]" tooltip="Scroll down one row" sound="[paging_click]" />
+      </rect>
+    </window>
+  </append>
+</configs>

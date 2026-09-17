@@ -1,0 +1,73 @@
+<Project Sdk="Microsoft.NET.Sdk">
+  <PropertyGroup>
+    <TargetFramework>net48</TargetFramework>
+    <LangVersion>7.3</LangVersion>
+    <AssemblyName>NearbyCraft</AssemblyName>
+    <RootNamespace>NearbyCraft</RootNamespace>
+    <Version>1.2.0</Version>
+    <AssemblyVersion>1.2.0.0</AssemblyVersion>
+    <FileVersion>1.2.0.0</FileVersion>
+    <Deterministic>true</Deterministic>
+    <GenerateDocumentationFile>false</GenerateDocumentationFile>
+    <DebugType>none</DebugType>
+    <GamePath Condition="'$(GamePath)' == ''">/home/bradhosk/.local/share/Steam/steamapps/common/7 Days To Die</GamePath>
+    <ManagedPath>$(GamePath)/7DaysToDie_Data/Managed</ManagedPath>
+    <HarmonyPath>$(GamePath)/Mods/0_TFP_Harmony</HarmonyPath>
+  </PropertyGroup>
+
+  <ItemGroup>
+    <PackageReference Include="Microsoft.NETFramework.ReferenceAssemblies" Version="1.0.3" PrivateAssets="all" />
+    <PackageFile Include="package/**/*" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <Reference Include="Assembly-CSharp">
+      <HintPath>$(ManagedPath)/Assembly-CSharp.dll</HintPath>
+      <Private>false</Private>
+    </Reference>
+    <Reference Include="UnityEngine.CoreModule">
+      <HintPath>$(ManagedPath)/UnityEngine.CoreModule.dll</HintPath>
+      <Private>false</Private>
+    </Reference>
+    <Reference Include="LogLibrary">
+      <HintPath>$(ManagedPath)/LogLibrary.dll</HintPath>
+      <Private>false</Private>
+    </Reference>
+    <Reference Include="Newtonsoft.Json">
+      <HintPath>$(ManagedPath)/Newtonsoft.Json.dll</HintPath>
+      <Private>false</Private>
+    </Reference>
+    <Reference Include="NGUI">
+      <HintPath>$(ManagedPath)/NGUI.dll</HintPath>
+      <Private>false</Private>
+    </Reference>
+    <Reference Include="0Harmony">
+      <HintPath>$(HarmonyPath)/0Harmony.dll</HintPath>
+      <Private>false</Private>
+    </Reference>
+  </ItemGroup>
+
+  <Target Name="ValidateGameFiles" BeforeTargets="Build">
+    <Error Condition="!Exists('$(ManagedPath)/Assembly-CSharp.dll')" Text="7 Days to Die was not found at '$(GamePath)'. Build with -p:GamePath=/path/to/7 Days To Die" />
+    <Error Condition="!Exists('$(HarmonyPath)/0Harmony.dll')" Text="The game's 0_TFP_Harmony mod is missing at '$(HarmonyPath)'. Verify the game installation." />
+  </Target>
+
+  <Target Name="PackageRelease" AfterTargets="Build" Condition="'$(Configuration)' == 'Release'">
+    <PropertyGroup>
+      <StageRoot>$(MSBuildProjectDirectory)/dist/stage</StageRoot>
+      <StageMod>$(StageRoot)/NearbyCraft</StageMod>
+      <StageXUi>$(StageMod)/Config/XUi_InGame</StageXUi>
+      <ReleaseZip>$(MSBuildProjectDirectory)/dist/NearbyCraft-1.2.0-V3.2.zip</ReleaseZip>
+    </PropertyGroup>
+    <RemoveDir Directories="$(StageRoot)" />
+    <MakeDir Directories="$(StageMod);$(StageXUi)" />
+    <Copy SourceFiles="$(TargetPath);$(MSBuildProjectDirectory)/README.md;$(MSBuildProjectDirectory)/LICENSE"
+          DestinationFolder="$(StageMod)" />
+    <Copy SourceFiles="@(PackageFile)"
+          DestinationFiles="@(PackageFile->'$(StageMod)/%(RecursiveDir)%(Filename)%(Extension)')" />
+    <Delete Files="$(ReleaseZip)" />
+    <ZipDirectory SourceDirectory="$(StageRoot)" DestinationFile="$(ReleaseZip)" Overwrite="true" />
+    <RemoveDir Directories="$(StageRoot)" />
+    <Message Importance="High" Text="Created $(ReleaseZip)" />
+  </Target>
+</Project>

@@ -1,0 +1,7 @@
+<configs>
+  <append xpath="/lootcontainers">
+    <lootcontainer name="nearbyCraftTerminalInternal" count="0" size="1,1" sound_open="UseActions/open_backpack" sound_close="UseActions/close_backpack" loot_quality_template="qualBaseTemplate">
+      <item name="cobweb" count="0" />
+    </lootcontainer>
+  </append>
+</configs>
