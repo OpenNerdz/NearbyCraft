@@ -1,4 +1,4 @@
-# NearbyCraft 1.3.3 acceptance checks
+# NearbyCraft 1.4.0 acceptance checks
 
 Automated checks cover the production transaction planner, tier/reserve rules, XML patch targets, recipe references, upgrade tool allow-lists, localization, patch-site metadata and closed-game backups. They do not launch Unity or simulate mouse input.
 
@@ -15,5 +15,10 @@ Use a disposable local world with EAC disabled. Do not use your main save as the
 9. Select food, drink, medicine, a readable item or a bundle in the console. Its Use action must be disabled and clicking it must direct you to move the item to the backpack. Move it first, then use it normally and confirm the real stack decreases once.
 10. Join a remote game, or have a second client join a host. Confirm remote storage actions are blocked and ordinary crafting still works. Do not use multiplayer until this check is confirmed.
 11. Inspect the new game log for NearbyCraft patch failures, XML errors, color-parse warnings and exceptions. Close the game, wait for the backup timer, and verify the resulting archive.
+12. Craft a Storage Network Loadout Locker at a workbench and confirm the recipe consumes 12 forged iron, 6 mechanical parts, 4 electrical parts, 4 springs and 2 duct tape. Place it within 15 blocks of an accessible console. Confirm it opens the four-profile loadout UI but never appears as a connected chest and never exposes its empty internal activation slot.
+13. Equip armor/clothing/badges and fill the toolbelt. Lock several backpack slots and put ammunition, food and tools in them; leave unrelated loot in unlocked slots. Save Loadout 1. Change every managed area, then equip Loadout 1. Confirm the exact equipment, toolbelt order, locked-slot layout, stack counts, durability, modifications and loaded ammunition return; outgoing gear should be in the console's connected chests and unlocked backpack loot must be unchanged.
+14. Test a pure toolbelt reorder while all relevant items are already on the player. It should succeed without needing duplicate items in storage. Then remove one required item from the network and retry: the entire player and chest state must remain unchanged and the missing item must be reported. Repeat with every connected unlocked chest slot full; outgoing items must not disappear and the swap must be rejected.
+15. Lock a required chest slot, lock the console from the player, move the nearest console outside link range, exceed the console's tier chest cap, and place a second farther console. Confirm the locker uses the nearest accessible in-range console and only the exact chests that console exposes. Upgrade that console and confirm the locker gains the higher chest cap without any locker upgrade or replacement.
+16. Attempt to save over an existing profile. Confirm the first click asks for an overwrite and expires after five seconds. Save again, restart the game and confirm the correct world/save profiles persist. Hold an item on the cursor and start a held-item action; both should block exchanges. Pick up a fully repaired locker inside a land claim and confirm the 15-second recovery returns the block.
 
 The pre-update archive and old installed-mod directory should remain available until these checks pass. Do not downgrade a world containing Tier 2–4 consoles or upgrade kits without first restoring its matching pre-update save.

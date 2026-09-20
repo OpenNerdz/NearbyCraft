@@ -124,10 +124,15 @@ namespace NearbyCraft
             return left.Equals(right) && left.Flags == right.Flags && left.TextureFullArray == right.TextureFullArray;
         }
 
-        private static bool Equal(ItemStack left, ItemStack right)
+        internal static bool ExactEquals(ItemStack left, ItemStack right)
         {
             return Empty(left) || Empty(right) ? Empty(left) && Empty(right)
                 : left.count == right.count && SameValue(left.itemValue, right.itemValue);
+        }
+
+        private static bool Equal(ItemStack left, ItemStack right)
+        {
+            return ExactEquals(left, right);
         }
 
         private static bool Empty(ItemStack stack)

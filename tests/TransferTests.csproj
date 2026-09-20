@@ -10,6 +10,7 @@
     <Compile Include="Program.cs" />
     <Compile Include="GameStubs.cs" />
     <Compile Include="../src/StorageTransferPlan.cs" Link="StorageTransferPlan.cs" />
+    <Compile Include="../src/LoadoutSwapPlanner.cs" Link="LoadoutSwapPlanner.cs" />
     <Compile Include="../src/TerminalRules.cs" Link="TerminalRules.cs" />
     <Compile Include="../src/NearbyCraftConfig.cs" Link="NearbyCraftConfig.cs" />
   </ItemGroup>

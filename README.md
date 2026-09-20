@@ -1,6 +1,6 @@
-# Nearby Craft 1.3.3
+# Nearby Craft 1.4.0
 
-A local-world quality-of-life mod for **7 Days to Die V3.2 b10**. Craft using nearby supplies and manage a chest network through a searchable Storage Console. Easy Anti-Cheat must be off.
+A local-world quality-of-life mod for **7 Days to Die V3.2 b10**. Craft using nearby supplies, manage a chest network through a searchable Storage Console, and exchange complete activity loadouts through that same network. Easy Anti-Cheat must be off.
 
 ## Storage consoles and upgrades
 
@@ -20,6 +20,16 @@ To move a player-placed console, fully repair it inside your active land-claim a
 Costs double with each capacity step. Higher tiers consolidate more chests into one interface; they do not grant larger chests, extra loot, extended crafting reach or a scan of distant chunks. Building several cheaper Tier 1 consoles remains a valid alternative, but their inventories are separate views.
 
 All tiers have the same **15-block default range**, configurable between 1 and 30. A fully upgraded console costs 160 steel, 80 mechanical parts, 150 electrical parts and 160 polymers in total, including its original construction. Steel and workbench requirements keep this a mid-game convenience without requiring rare end-game loot.
+
+## Storage Network Loadout Locker
+
+The new tall metal locker is an **interface to the nearest accessible Storage Console**, not another container. It has no usable inventory and is explicitly excluded from console chest scans. Place it within the configured `TerminalRange` of a console; it then uses that console's nearest-chest selection, tier cap, range, ownership, container locks and slot locks.
+
+It saves four per-world profiles containing all 12 equipment/clothing/badge slots, the full toolbelt, and only the backpack slots you have locked. Unlocked backpack loot is preserved exactly. A profile is a template: saving never moves or duplicates items. Applying it reuses suitable items already in any managed player slot, withdraws only the missing items, and deposits only the outgoing surplus.
+
+Each exchange is planned against cloned chest inventories. It succeeds only if the whole requested loadout exists and every outgoing item fits in unlocked connected storage. A missing item, full network, changed chest, changed player inventory, incompatible slot or inaccessible lock rejects the operation before chest counts commit. Existing profile overwrites require a second click within five seconds. Profiles are stored in `loadouts.json`, separated by world and save name, with exact item quality, durability, modifications, ammunition and other metadata plus an item-name check to reject stale IDs safely.
+
+The locker is crafted at a workbench in 45 seconds from **12 forged iron, 6 mechanical parts, 4 electrical parts, 4 springs and 2 duct tape**. This is intentionally cheaper than a Storage Console because the locker cannot function without one and adds no storage capacity. It has no upgrade tiers: upgrading the linked console already increases the network available to the locker from 8 to 64 chests. Inside an active land claim, a fully repaired locker can be picked up after 15 seconds.
 
 ## Controls and new supply features
 
@@ -45,6 +55,8 @@ Nearby crafting still includes accessible player storage, workstation outputs, c
 
 Terminal operations plan on cloned inventories, validate the source contents and slot locks, then commit only changed slots. Bulk deposit marks each affected chest once. Item metadata is retained rather than merging different variants. This is a synchronous local-world transaction, not a network transaction protocol.
 
+Loadout swaps also refuse to run while an item is held on the cursor or the held tool/weapon is performing an action. Do not remove the mod or downgrade a save while its custom blocks are placed. As with any inventory mod, test the loadout workflow in a disposable world before trusting it with valuable equipment.
+
 The mod checks the expected V3.2 crafting patch sites at startup. A mismatch removes all of this mod's Harmony patches and disables nearby crafting for that session. Review the game log before using it after a game update.
 
 Do not combine with Beyond Storage, ProxiCraft, Craft From Containers or another mod that changes the same crafting/storage behavior. Broader remote repair/refuel and workstation automation are not part of this storage-focused release.
@@ -53,7 +65,7 @@ Do not combine with Beyond Storage, ProxiCraft, Craft From Containers or another
 
 1. Close the game and back up saves, generated worlds and the old mod.
 2. Start the game with Easy Anti-Cheat disabled.
-3. Download `NearbyCraft-1.3.3-V3.2.zip` from the [v1.3.3 release](https://github.com/OpenNerdz/NearbyCraft/releases/tag/v1.3.3), then extract it into `Mods` so the manifest is `Mods/NearbyCraft/ModInfo.xml`.
+3. Extract `NearbyCraft-1.4.0-V3.2.zip` into `Mods` so the manifest is `Mods/NearbyCraft/ModInfo.xml`.
 4. Preserve your existing `config.json` when updating. Missing settings use defaults.
 5. Test the controls and upgrades in a disposable world before using valuable supplies.
 
@@ -68,6 +80,7 @@ Edit `Mods/NearbyCraft/config.json` while the game is closed.
 - `RespectLockedSlots`: protects chest slot locks when enabled (default true). Independently, MATCHING ONLY protects backpack locks, while DEPOSIT ALL includes their contents.
 - `PersonalReserves`: internal item names mapped to quantities, e.g. `{"ammo9mmBulletBall": 150}`. The KEEP control sets these without editing JSON.
 - Existing source toggles, sorting and autofocus preferences are preserved.
+- Loadout profiles are kept separately in `loadouts.json`; its `.bak` file is the previous saved revision. Keep both files when updating or moving the mod.
 
 UI preference changes use a temporary file and retain the previous configuration as `config.json.bak`. Nearby crafting scans only loaded chunks when needed; ingredient removal reuses a batch snapshot instead of rescanning for every ingredient.
 
@@ -110,5 +123,9 @@ DEPOSIT ALL now includes locked backpack slots as requested. MATCHING ONLY retai
 ### 1.3.3 terminal use-action fix
 
 Use actions are disabled on the console's virtual item cells. Move food, drink, medicine, books or bundles to the backpack before using them. This prevents vanilla from applying an effect while decrementing only the terminal's read-only display instead of the real chest stack.
+
+### 1.4.0 Storage Network Loadout Locker
+
+Adds four loss-safe equipment, toolbelt and locked-backpack supply profiles through a dedicated tall locker access node. The locker holds no gear and cannot become an extra network chest. Whole swaps share the nearest Storage Console's actual tier-limited chest set and fail without committing when requested items or destination space are unavailable.
 
 Research referenced the MIT-licensed CraftFromContainers and ProxiCraft projects and Apache-2.0-licensed Beyond Storage projects; this implementation is purpose-built.

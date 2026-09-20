@@ -2,9 +2,9 @@
 <xml>
   <Name value="NearbyCraft" />
   <DisplayName value="Nearby Craft" />
-  <Description value="Craft from nearby storage and manage connected chests through a searchable Storage Network Console." />
+  <Description value="Craft from nearby storage, manage connected chests, and exchange saved loadouts through the Storage Network." />
   <Author value="bradhosk" />
-  <Version value="1.3.3" />
+  <Version value="1.4.0" />
   <Website value="https://github.com/OpenNerdz/NearbyCraft" />
   <SkipWithAntiCheat value="true" />
 </xml>

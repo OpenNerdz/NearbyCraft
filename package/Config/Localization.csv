@@ -1,4 +1,6 @@
 Key,File,Type,UsedInMainMenu,NoTranslate,KeepLoaded,english
+nearbyCraftLoadoutLocker,blocks,Block,,x,,Storage Network Loadout Locker
+nearbyCraftLoadoutLockerDesc,blocks,Block,,x,,Saves four equipment toolbelt and locked-backpack supply profiles. Holds no items: complete loadout swaps use the nearest accessible Storage Console and obey its chest cap range access and slot locks. Requires a console within 15 blocks by default.
 nearbyCraftStorageTerminal,blocks,Block,,x,,Storage Console - Tier 1 (8 Chests)
 nearbyCraftStorageTerminalDesc,blocks,Block,,x,,Connects the nearest 8 accessible player chests within 15 blocks by default. Upgrade in place with a Tier 2 kit and a repair tool. Close the console before upgrading. Other chests remain usable directly.
 nearbyCraftStorageTerminalTier2,blocks,Block,,x,,Storage Console - Tier 2 (16 Chests)

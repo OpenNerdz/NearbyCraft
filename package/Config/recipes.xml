@@ -1,5 +1,12 @@
 <configs>
   <append xpath="/recipes">
+    <recipe name="nearbyCraftLoadoutLocker" count="1" craft_time="45" craft_area="workbench" always_unlocked="true" tags="workbenchCrafting">
+      <ingredient name="resourceForgedIron" count="12" />
+      <ingredient name="resourceMechanicalParts" count="6" />
+      <ingredient name="resourceElectricParts" count="4" />
+      <ingredient name="resourceSpring" count="4" />
+      <ingredient name="resourceDuctTape" count="2" />
+    </recipe>
     <recipe name="nearbyCraftStorageTerminal" count="1" craft_time="30" craft_area="workbench" always_unlocked="true" tags="workbenchCrafting">
       <ingredient name="resourceForgedSteel" count="20" />
       <ingredient name="resourceMechanicalParts" count="10" />

@@ -143,6 +143,43 @@ Check(TerminalRules.Depositable("ammo", 100, reserves, retained) == 50, "Reserve
 Check(TerminalRules.Depositable("ammo", 50, reserves, retained) == 50, "Remaining surplus deposits");
 Check(TerminalRules.Depositable("food", 20, reserves, retained) == 10, "Reserves independent by type");
 Check(TerminalRules.Depositable("wood", 90, reserves, retained) == 90, "Unreserved supplies deposit normally");
+
+var networkSlots = new[] { Stack(2, 1), ItemStack.Empty };
+var networkPlan = Plan(networkSlots);
+LoadoutSwapResult swap;
+Check(LoadoutSwapPlanner.TryPlan(new[] { Stack(1, 1), Stack(2, 1) },
+    new[] { Stack(2, 1), Stack(1, 1) }, networkPlan, out swap), "Player-slot permutations need no network items");
+Check(swap.Withdrawn == 0 && swap.Deposited == 0, "Permutation reuses carried items instead of network round trips");
+Check(networkPlan.TryCommit(_ => true) && networkSlots[0].itemValue.type == 2, "Permutation leaves network unchanged");
+
+networkSlots = new[] { Stack(2, 1) };
+networkPlan = Plan(networkSlots);
+Check(LoadoutSwapPlanner.TryPlan(new[] { Stack(1, 1) }, new[] { Stack(2, 1) }, networkPlan, out swap),
+    "Loadout can exchange through a full network by withdrawing before depositing");
+Check(swap.Withdrawn == 1 && swap.Deposited == 1 && networkPlan.TryCommit(_ => true), "Exact swap commits both sides");
+Check(networkSlots[0].itemValue.type == 1 && networkSlots[0].count == 1, "Outgoing item occupies space freed by requested item");
+
+networkSlots = new[] { Stack(2, 1) };
+networkPlan = Plan(networkSlots);
+Check(!LoadoutSwapPlanner.TryPlan(new[] { Stack(1, 1) }, new[] { Stack(3, 1) }, networkPlan, out swap),
+    "Missing requested loadout item rejects whole plan");
+Check(swap.ProblemItem.itemValue.type == 3 && swap.ProblemCount == 1, "Missing item is reported precisely");
+Check(networkSlots[0].itemValue.type == 2, "Rejected loadout never mutates live network");
+
+networkSlots = new[] { Stack(2, 100) };
+networkPlan = Plan(networkSlots);
+Check(!LoadoutSwapPlanner.TryPlan(new[] { Stack(1, 1) }, new[] { ItemStack.Empty }, networkPlan, out swap),
+    "No unlocked network space rejects outgoing loadout items");
+Check(networkSlots[0].itemValue.type == 2 && networkSlots[0].count == 100, "Full-network rejection preserves live counts");
+
+var variantA = Stack(1, 1, 7);
+var variantB = Stack(1, 1, 8);
+networkSlots = new[] { variantB.Clone() };
+networkPlan = Plan(networkSlots);
+Check(LoadoutSwapPlanner.TryPlan(new[] { variantA.Clone() }, new[] { variantB.Clone() }, networkPlan, out swap)
+    && swap.Withdrawn == 1 && swap.Deposited == 1, "Loadouts retain metadata-distinct equipment variants");
+Check(networkPlan.TryCommit(_ => true) && networkSlots[0].itemValue.Metadata == 7, "Metadata variant exchange commits exactly");
+
 var configuration = new NearbyCraftConfig { Range = 100, TerminalRange = -1, CacheMilliseconds = 0, TerminalSort = "count", PersonalReserves = null };
 configuration.Validate();
 Check(configuration.Range == 30 && configuration.TerminalRange == 1 && configuration.CacheMilliseconds == 100 && configuration.TerminalSort == "Count" && configuration.PersonalReserves.Count == 0, "Config migration and clamps");

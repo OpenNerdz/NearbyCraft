@@ -41,7 +41,21 @@ blocks = merged['blocks.xml']
 items = merged['items.xml']
 recipes = merged['recipes.xml']
 base = 'nearbyCraftStorageTerminal'
+locker = 'nearbyCraftLoadoutLocker'
 names = [base] + [base + f'Tier{tier}' for tier in range(2, 5)]
+check(len(blocks.xpath(f'/blocks/block[@name="{locker}"]')) == 1, 'Unique loadout locker block')
+check(items.xpath(f'/items/item[@name="{locker}"]') == [], 'No loadout locker item/block collision')
+check(blocks.xpath(f'/blocks/block[@name="{locker}"]/property[@name="Model"]/@value') == ['@:Entities/LootContainers/locker_ver1_lootPrefab.prefab'], 'Tall locker model selected')
+check(blocks.xpath(f'/blocks/block[@name="{locker}"]/property[@name="MultiBlockDim"]/@value') == ['1,2,1'], 'Locker occupies a stable 1x2 footprint')
+check(blocks.xpath(f'/blocks/block[@name="{locker}"]/property[@class="CompositeFeatures"]/property[@class="TEFeatureStorage"]/property[@name="LootList"]/@value') == ['nearbyCraftTerminalInternal'], 'Locker has no item-bearing internal inventory')
+check(not blocks.xpath(f'/blocks/block[@name="{locker}"]/property[@class="UpgradeBlock"]'), 'Loadout locker has no misleading capacity upgrade')
+locker_recipe = recipes.xpath(f'/recipes/recipe[@name="{locker}"]')[0]
+check(locker_recipe.get('craft_area') == 'workbench', 'Loadout locker requires a workbench')
+check([(i.get('name'), int(i.get('count'))) for i in locker_recipe] == [
+    ('resourceForgedIron', 12), ('resourceMechanicalParts', 6), ('resourceElectricParts', 4),
+    ('resourceSpring', 4), ('resourceDuctTape', 2)], 'Balanced loadout locker recipe')
+for ingredient in locker_recipe:
+    check(bool(items.xpath(f'/items/item[@name="{ingredient.get("name")}"]')), f'Locker ingredient exists: {ingredient.get("name")}')
 for name in names:
     check(len(blocks.xpath(f'/blocks/block[@name="{name}"]')) == 1, f'Unique block {name}')
     check(items.xpath(f'/items/item[@name="{name}"]') == [], f'No item/block name collision: {name}')
@@ -79,15 +93,21 @@ with (repo / 'package/Config/Localization.csv').open(newline='') as handle:
 check(all(None not in row and all(value is not None for value in row.values()) for row in rows), 'Localization CSV column counts')
 keys = [row['Key'] for row in rows]
 check(len(keys) == len(set(keys)), 'Unique localization keys')
-for name in names + [f'nearbyCraftTerminalUpgrade{tier}' for tier in range(2, 5)]:
+for name in [locker] + names + [f'nearbyCraftTerminalUpgrade{tier}' for tier in range(2, 5)]:
     check(name in keys and name + 'Desc' in keys, f'Localized name/description: {name}')
 
 for relative, root in merged.items():
     if relative.endswith('windows.xml'):
         check(len(root.xpath('/windows/window[@name="nearbyCraftStorageTerminal"]')) == 1, 'Terminal window unique')
+        check(len(root.xpath('/windows/window[@name="nearbyCraftLoadoutLocker"]')) == 1, 'Loadout locker window unique')
+        for index in range(1, 5):
+            check(len(root.xpath(f'//button[@name="nearbyCraftLoadoutSave{index}"]')) == 1, f'Loadout {index} save control')
+            check(len(root.xpath(f'//button[@name="nearbyCraftLoadoutApply{index}"]')) == 1, f'Loadout {index} apply control')
         check(len(root.xpath('//button[@name="nearbyCraftTerminalReserve"]')) == 1, 'Reserve control exists')
         for name, caption in [('nearbyCraftTerminalDeposit', 'DEPOSIT ALL'), ('nearbyCraftTerminalDepositMatching', 'MATCHING ONLY'), ('nearbyCraftTerminalReserve', 'KEEP'), ('nearbyCraftTerminalClearReserve', 'CLEAR KEEP')]:
             buttons = root.xpath(f'//button[@name="{name}"]')
             check(len(buttons) == 1 and buttons[0].xpath('label/@text') == [caption], f'Visible labelled control: {caption}')
             check(int(buttons[0].get('width')) >= 100 and int(buttons[0].get('height')) >= 32, f'Usable click target: {caption}')
+session_source = (repo / 'src/StorageNetworkSession.cs').read_text()
+check('LoadoutLockerManager.IsLocker' in session_source, 'Loadout locker is explicitly excluded from console storage scans')
 print(f'PASS: {checks} XML/localization assertions across {len(merged)} patched vanilla files.')

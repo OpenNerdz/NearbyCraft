@@ -50,6 +50,7 @@ namespace NearbyCraft
         private readonly World world;
         private readonly EntityPlayerLocal player;
         private readonly Vector3i terminalPosition;
+        private readonly Vector3i interactionPosition;
         private readonly int range;
         private readonly bool respectLockedSlots;
         private readonly List<StorageSource> sources = new List<StorageSource>(32);
@@ -66,7 +67,7 @@ namespace NearbyCraft
             {
                 return NearbyCraftMod.CanUseLocalStorage && world != null && player != null
                     && StorageTerminalManager.IsTerminal(world.GetBlock(terminalPosition).Block)
-                    && (player.position - terminalPosition.ToVector3()).sqrMagnitude <= 64f;
+                    && (player.position - interactionPosition.ToVector3()).sqrMagnitude <= 64f;
             }
         }
 
@@ -86,11 +87,13 @@ namespace NearbyCraft
         internal int LastVisibleIndex { get { return Math.Min(filteredItems.Count, FirstVisibleIndex + VisibleSlotCount); } }
         internal StorageTerminalSort Sort { get { return sort; } }
 
-        internal StorageNetworkSession(World world, EntityPlayerLocal player, Vector3i terminalPosition, NearbyCraftConfig config)
+        internal StorageNetworkSession(World world, EntityPlayerLocal player, Vector3i terminalPosition, NearbyCraftConfig config,
+            Vector3i? interactionPosition = null)
         {
             this.world = world;
             this.player = player;
             this.terminalPosition = terminalPosition;
+            this.interactionPosition = interactionPosition ?? terminalPosition;
             Tier = StorageTerminalManager.GetTier(world.GetBlock(terminalPosition).Block);
             range = config == null ? 15 : config.TerminalRange;
             respectLockedSlots = config == null || config.RespectLockedSlots;
@@ -143,6 +146,7 @@ namespace NearbyCraft
                             Vector3i position = tileEntity.ToWorldPos();
                             TEFeatureLandClaim landClaim;
                             if (position == terminalPosition || IsTerminal(tileEntity)
+                                || LoadoutLockerManager.IsLocker(world.GetBlock(position).Block)
                                 || (tileEntity.TryGetSelfOrFeature<TEFeatureLandClaim>(out landClaim) && landClaim != null))
                             {
                                 continue;
@@ -318,9 +322,10 @@ namespace NearbyCraft
             return transaction;
         }
 
-        private bool Commit(Transaction transaction)
+        private bool Commit(Transaction transaction, Func<bool> extraValidation = null)
         {
             if (!IsAvailable) return false;
+            if (extraValidation != null && !extraValidation()) return false;
             if (!transaction.Plan.TryCommit(index =>
             {
                 StorageSource source = transaction.Sources[index];
@@ -342,6 +347,20 @@ namespace NearbyCraft
                 }
             }
             StorageIndex.Invalidate();
+            return true;
+        }
+
+        internal bool TryExchangeLoadout(IList<ItemStack> current, IList<ItemStack> target,
+            Func<bool> playerStillValid, out LoadoutSwapResult result)
+        {
+            Transaction transaction = BeginTransaction();
+            if (!LoadoutSwapPlanner.TryPlan(current, target, transaction.Plan, out result)) return false;
+            if (!Commit(transaction, playerStillValid))
+            {
+                result.Error = "The player or storage network changed during the swap. Nothing was moved.";
+                return false;
+            }
+            RebuildItems();
             return true;
         }
 

@@ -10,7 +10,7 @@ namespace NearbyCraft
     public sealed class NearbyCraftMod : IModApi
     {
         internal const string ModName = "NearbyCraft";
-        internal const string ModVersion = "1.3.2";
+        internal const string ModVersion = "1.4.0";
         internal static bool PatchesReady { get; private set; }
 
         internal static NearbyCraftConfig Config { get; private set; }
@@ -30,6 +30,7 @@ namespace NearbyCraft
         public void InitMod(Mod mod)
         {
             Config = LoadConfig(mod.Path);
+            LoadoutProfileStore.Initialize(mod.Path);
             StorageIndex.Configure(Config);
 
             try
