@@ -34,7 +34,12 @@ namespace NearbyCraft
 
             public int Compare(StorageSource left, StorageSource right)
             {
-                return left.DistanceSquared.CompareTo(right.DistanceSquared);
+                int order = left.DistanceSquared.CompareTo(right.DistanceSquared);
+                if (order != 0) return order;
+                order = left.Position.x.CompareTo(right.Position.x);
+                if (order != 0) return order;
+                order = left.Position.y.CompareTo(right.Position.y);
+                return order != 0 ? order : left.Position.z.CompareTo(right.Position.z);
             }
         }
 
@@ -52,7 +57,18 @@ namespace NearbyCraft
         private readonly Dictionary<int, List<AggregateBucket>> bucketsByType = new Dictionary<int, List<AggregateBucket>>(128);
         private readonly List<ItemStack> allItems = new List<ItemStack>(128);
         private readonly List<ItemStack> filteredItems = new List<ItemStack>(128);
-        private readonly List<StorageSource> modifiedSources = new List<StorageSource>(8);
+        internal int Tier { get; private set; }
+        internal int ChestLimit { get { return TerminalRules.ChestLimit(Tier); } }
+        internal int OverflowCount { get; private set; }
+        internal bool IsAvailable
+        {
+            get
+            {
+                return NearbyCraftMod.CanUseLocalStorage && world != null && player != null
+                    && StorageTerminalManager.IsTerminal(world.GetBlock(terminalPosition).Block)
+                    && (player.position - terminalPosition.ToVector3()).sqrMagnitude <= 64f;
+            }
+        }
 
         private string search = string.Empty;
         private StorageTerminalSort sort = StorageTerminalSort.Name;
@@ -75,6 +91,7 @@ namespace NearbyCraft
             this.world = world;
             this.player = player;
             this.terminalPosition = terminalPosition;
+            Tier = StorageTerminalManager.GetTier(world.GetBlock(terminalPosition).Block);
             range = config == null ? 15 : config.TerminalRange;
             respectLockedSlots = config == null || config.RespectLockedSlots;
             StorageTerminalSort configuredSort;
@@ -88,7 +105,8 @@ namespace NearbyCraft
         internal void Rescan()
         {
             sources.Clear();
-            if (world == null || player == null)
+            OverflowCount = 0;
+            if (!IsAvailable)
             {
                 RebuildItems();
                 return;
@@ -123,7 +141,9 @@ namespace NearbyCraft
                             }
 
                             Vector3i position = tileEntity.ToWorldPos();
-                            if (position == terminalPosition || IsTerminal(tileEntity))
+                            TEFeatureLandClaim landClaim;
+                            if (position == terminalPosition || IsTerminal(tileEntity)
+                                || (tileEntity.TryGetSelfOrFeature<TEFeatureLandClaim>(out landClaim) && landClaim != null))
                             {
                                 continue;
                             }
@@ -156,6 +176,8 @@ namespace NearbyCraft
                 }
 
                 sources.Sort(SourceDistanceComparer.Instance);
+                OverflowCount = Math.Max(0, sources.Count - ChestLimit);
+                if (sources.Count > ChestLimit) sources.RemoveRange(ChestLimit, sources.Count - ChestLimit);
             }
             catch (Exception exception)
             {
@@ -270,269 +292,119 @@ namespace NearbyCraft
             return true;
         }
 
+        private sealed class Transaction
+        {
+            internal readonly StorageTransferPlan Plan = new StorageTransferPlan();
+            internal readonly List<StorageSource> Sources = new List<StorageSource>();
+            internal readonly List<ItemStack[]> Slots = new List<ItemStack[]>();
+            internal readonly List<bool[]> Locks = new List<bool[]>();
+        }
+
+        private Transaction BeginTransaction()
+        {
+            var transaction = new Transaction();
+            if (!IsAvailable) return transaction;
+            foreach (StorageSource source in sources)
+            {
+                if (!IsSourceValid(source)) continue;
+                ItemStack[] slots = source.Storage.items;
+                var locks = new bool[slots.Length];
+                for (int i = 0; i < locks.Length; i++) locks[i] = IsSlotLocked(source, i);
+                transaction.Sources.Add(source);
+                transaction.Slots.Add(slots);
+                transaction.Locks.Add(locks);
+                transaction.Plan.Add(slots, locks);
+            }
+            return transaction;
+        }
+
+        private bool Commit(Transaction transaction)
+        {
+            if (!IsAvailable) return false;
+            if (!transaction.Plan.TryCommit(index =>
+            {
+                StorageSource source = transaction.Sources[index];
+                if (!IsSourceValid(source) || !ReferenceEquals(source.Storage.items, transaction.Slots[index])) return false;
+                for (int i = 0; i < transaction.Locks[index].Length; i++)
+                    if (IsSlotLocked(source, i) != transaction.Locks[index][i]) return false;
+                return true;
+            })) return false;
+            for (int i = 0; i < transaction.Sources.Count; i++)
+            {
+                if (!transaction.Plan.Changed(i)) continue;
+                try { transaction.Sources[i].Owner.SetModified(); }
+                catch (Exception exception)
+                {
+                    // Live counts have committed. Still complete the cursor/player
+                    // side of the transfer, even if a notification fails.
+                    Log.Error("[NearbyCraft] Storage transfer committed but a change notification failed at {0}: {1}",
+                        transaction.Sources[i].Position, exception);
+                }
+            }
+            StorageIndex.Invalidate();
+            return true;
+        }
+
         internal int Deposit(ItemStack stack)
         {
-            if (stack == null || stack.IsEmpty() || stack.count <= 0 || !stack.itemValue.ItemClassOrMissing.CanPlaceInContainer())
-            {
-                return 0;
-            }
-
-            int requested = stack.count;
-            modifiedSources.Clear();
-            for (int sourceIndex = 0; sourceIndex < sources.Count && stack.count > 0; sourceIndex++)
-            {
-                StorageSource source = sources[sourceIndex];
-                if (!IsSourceValid(source))
-                {
-                    continue;
-                }
-
-                bool changed = false;
-                ItemStack[] slots = source.Storage.items;
-                for (int slotIndex = 0; slotIndex < slots.Length && stack.count > 0; slotIndex++)
-                {
-                    if (IsSlotLocked(source, slotIndex))
-                    {
-                        continue;
-                    }
-
-                    ItemStack target = slots[slotIndex];
-                    int transfer;
-                    if (target != null && !target.IsEmpty() && target.CanStackPartlyWith(stack, out transfer))
-                    {
-                        target.count += transfer;
-                        stack.count -= transfer;
-                        changed = true;
-                    }
-                }
-
-                if (changed)
-                {
-                    modifiedSources.Add(source);
-                }
-            }
-
-            for (int sourceIndex = 0; sourceIndex < sources.Count && stack.count > 0; sourceIndex++)
-            {
-                StorageSource source = sources[sourceIndex];
-                if (!IsSourceValid(source))
-                {
-                    continue;
-                }
-
-                bool changed = false;
-                ItemStack[] slots = source.Storage.items;
-                int maxCount = Math.Max(1, stack.itemValue.ItemClassOrMissing.MaxCount);
-                for (int slotIndex = 0; slotIndex < slots.Length && stack.count > 0; slotIndex++)
-                {
-                    if (IsSlotLocked(source, slotIndex) || (slots[slotIndex] != null && !slots[slotIndex].IsEmpty()))
-                    {
-                        continue;
-                    }
-
-                    int transfer = Math.Min(maxCount, stack.count);
-                    slots[slotIndex] = new ItemStack(stack.itemValue.Clone(), transfer);
-                    stack.count -= transfer;
-                    changed = true;
-                }
-
-                if (changed)
-                {
-                    if (!modifiedSources.Contains(source))
-                    {
-                        modifiedSources.Add(source);
-                    }
-                }
-            }
-
-            int moved = requested - stack.count;
-            if (moved > 0)
-            {
-                for (int i = 0; i < modifiedSources.Count; i++)
-                {
-                    modifiedSources[i].Owner.SetModified();
-                }
-                StorageIndex.Invalidate();
-            }
+            if (stack == null || stack.IsEmpty() || !stack.CanMoveTo(XUiC_ItemStack.StackLocationTypes.LootContainer)) return 0;
+            Transaction transaction = BeginTransaction();
+            int moved = transaction.Plan.Deposit(stack);
+            if (moved <= 0 || !Commit(transaction)) return 0;
+            stack.count -= moved;
             return moved;
         }
 
         internal int Withdraw(ItemStack template, int requested)
         {
-            if (template == null || template.IsEmpty() || requested <= 0)
-            {
-                return 0;
-            }
-
-            int remaining = requested;
-            for (int sourceIndex = 0; sourceIndex < sources.Count && remaining > 0; sourceIndex++)
-            {
-                StorageSource source = sources[sourceIndex];
-                if (!IsSourceValid(source))
-                {
-                    continue;
-                }
-
-                bool changed = false;
-                ItemStack[] slots = source.Storage.items;
-                for (int slotIndex = 0; slotIndex < slots.Length && remaining > 0; slotIndex++)
-                {
-                    if (IsSlotLocked(source, slotIndex))
-                    {
-                        continue;
-                    }
-
-                    ItemStack stored = slots[slotIndex];
-                    if (!ItemsMatch(stored, template))
-                    {
-                        continue;
-                    }
-
-                    int transfer = Math.Min(stored.count, remaining);
-                    stored.count -= transfer;
-                    remaining -= transfer;
-                    if (stored.count <= 0)
-                    {
-                        stored.Clear();
-                    }
-                    changed = true;
-                }
-
-                if (changed)
-                {
-                    source.Owner.SetModified();
-                }
-            }
-
-            int moved = requested - remaining;
-            if (moved > 0)
-            {
-                StorageIndex.Invalidate();
-            }
-            return moved;
+            Transaction transaction = BeginTransaction();
+            int moved = transaction.Plan.Withdraw(template, requested);
+            return moved > 0 && Commit(transaction) ? moved : 0;
         }
 
-        internal int DepositBackpack(XUiM_PlayerInventory inventory)
+        // Smart matching is evaluated against the ORIGINAL contents, not items just deposited.
+        // Deposit All includes backpack locks; Matching Only respects them.
+        // Reserves count eligible backpack items; toolbelt contents are never touched.
+        internal int DepositBackpack(XUiM_PlayerInventory inventory, bool matchingOnly)
         {
-            if (inventory == null || player == null)
-            {
-                return 0;
-            }
-
+            if (inventory == null || player == null) return 0;
             ItemStack[] current = inventory.GetBackpackItemStacks();
             ItemStack[] updated = ItemStack.Clone(current);
             PackedBoolArray locked = inventory.Backpack.LockedSlots;
             int slotLimit = Math.Min(updated.Length, player.CarryCapacity);
+            var retained = new Dictionary<string, int>();
+            Transaction transaction = BeginTransaction();
             int moved = 0;
-
             for (int i = 0; i < slotLimit; i++)
             {
-                if ((locked != null && i < locked.Length && locked[i]) || updated[i] == null || updated[i].IsEmpty())
-                {
-                    continue;
-                }
-
-                ItemStack remainder = updated[i].Clone();
-                int deposited = Deposit(remainder);
-                if (deposited <= 0)
-                {
-                    continue;
-                }
-
+                ItemStack stack = updated[i];
+                bool slotLocked = locked != null && i < locked.Length && locked[i];
+                if (!TerminalRules.CanBulkDepositSlot(matchingOnly, slotLocked) || stack == null || stack.IsEmpty()
+                    || !stack.CanMoveTo(XUiC_ItemStack.StackLocationTypes.LootContainer)) continue;
+                string name = stack.itemValue.ItemClassOrMissing.GetItemName();
+                int amount = TerminalRules.Depositable(name, stack.count,
+                    NearbyCraftMod.Config == null ? null : NearbyCraftMod.Config.PersonalReserves, retained);
+                if (amount == 0 || (matchingOnly && !transaction.Plan.Contains(stack))) continue;
+                ItemStack request = stack.Clone();
+                request.count = amount;
+                int deposited = transaction.Plan.Deposit(request);
                 moved += deposited;
-                updated[i] = remainder.count > 0 ? remainder : ItemStack.Empty;
+                stack.count -= deposited;
+                if (stack.count == 0) updated[i] = ItemStack.Empty.Clone();
             }
-
-            if (moved > 0)
-            {
-                inventory.SetBackpackItemStacks(updated);
-                RebuildItems();
-            }
+            if (moved == 0 || !Commit(transaction)) return 0;
+            inventory.SetBackpackItemStacks(updated);
+            RebuildItems();
             return moved;
-        }
-
-        internal bool CanDeposit(ItemStack stack)
-        {
-            return stack != null
-                && !stack.IsEmpty()
-                && stack.itemValue.ItemClassOrMissing.CanPlaceInContainer()
-                && GetDepositCapacity(stack) >= stack.count;
         }
 
         internal bool CanDepositAfterWithdraw(ItemStack removed, ItemStack added)
         {
-            if (CanDeposit(added))
-            {
-                return true;
-            }
-            if (removed == null || removed.IsEmpty() || added == null || added.IsEmpty())
-            {
-                return false;
-            }
-
-            long capacity = GetDepositCapacity(added);
-            int remainingRemoval = removed.count;
-            int addedMax = Math.Max(1, added.itemValue.ItemClassOrMissing.MaxCount);
-            for (int sourceIndex = 0; sourceIndex < sources.Count && remainingRemoval > 0; sourceIndex++)
-            {
-                StorageSource source = sources[sourceIndex];
-                if (!IsSourceValid(source))
-                {
-                    continue;
-                }
-
-                ItemStack[] slots = source.Storage.items;
-                for (int slotIndex = 0; slotIndex < slots.Length && remainingRemoval > 0; slotIndex++)
-                {
-                    if (IsSlotLocked(source, slotIndex) || !ItemsMatch(slots[slotIndex], removed))
-                    {
-                        continue;
-                    }
-
-                    int taken = Math.Min(slots[slotIndex].count, remainingRemoval);
-                    remainingRemoval -= taken;
-                    if (taken == slots[slotIndex].count)
-                    {
-                        capacity += addedMax;
-                    }
-                }
-            }
-            return capacity >= added.count;
-        }
-
-        internal bool ApplyDisplayChange(ItemStack previous, ItemStack current)
-        {
-            previous = previous ?? ItemStack.Empty;
-            current = current ?? ItemStack.Empty;
-            bool changed = false;
-
-            if (ItemsMatch(previous, current))
-            {
-                int delta = current.count - previous.count;
-                if (delta > 0)
-                {
-                    ItemStack addition = current.Clone();
-                    addition.count = delta;
-                    changed = Deposit(addition) > 0;
-                }
-                else if (delta < 0)
-                {
-                    changed = Withdraw(previous, -delta) > 0;
-                }
-            }
-            else
-            {
-                if (!previous.IsEmpty())
-                {
-                    changed |= Withdraw(previous, previous.count) > 0;
-                }
-                if (!current.IsEmpty())
-                {
-                    ItemStack addition = current.Clone();
-                    changed |= Deposit(addition) > 0;
-                }
-            }
-            return changed;
+            if (added == null || added.IsEmpty()) return true;
+            Transaction transaction = BeginTransaction();
+            if (removed != null && !removed.IsEmpty()
+                && transaction.Plan.Withdraw(removed, removed.count) != removed.count) return false;
+            return transaction.Plan.Deposit(added) == added.count;
         }
 
         internal bool TrySwap(ItemStack displayed, ItemStack held, out ItemStack newHeld)
@@ -540,84 +412,33 @@ namespace NearbyCraft
             displayed = displayed ?? ItemStack.Empty;
             held = held ?? ItemStack.Empty;
             newHeld = held.Clone();
-
+            Transaction transaction = BeginTransaction();
             if (held.IsEmpty())
             {
-                int withdrawn = Withdraw(displayed, displayed.count);
-                if (withdrawn <= 0)
-                {
-                    return false;
-                }
+                int amount = transaction.Plan.Withdraw(displayed, displayed.count);
+                if (amount <= 0 || !Commit(transaction)) return false;
                 newHeld = displayed.Clone();
-                newHeld.count = withdrawn;
+                newHeld.count = amount;
                 return true;
             }
-
-            if (displayed.IsEmpty())
+            if (displayed.IsEmpty() || ItemsMatch(displayed, held))
             {
-                ItemStack remainder = held.Clone();
-                if (Deposit(remainder) <= 0)
-                {
-                    return false;
-                }
-                newHeld = remainder.count > 0 ? remainder : ItemStack.Empty;
+                int amount = transaction.Plan.Deposit(held);
+                if (amount <= 0 || !Commit(transaction)) return false;
+                newHeld.count -= amount;
+                if (newHeld.count == 0) newHeld = ItemStack.Empty;
                 return true;
             }
-
-            if (!CanDepositAfterWithdraw(displayed, held))
-            {
-                return false;
-            }
-
-            int removed = Withdraw(displayed, displayed.count);
-            if (removed != displayed.count)
-            {
-                if (removed > 0)
-                {
-                    ItemStack rollback = displayed.Clone();
-                    rollback.count = removed;
-                    Deposit(rollback);
-                }
-                return false;
-            }
-
-            ItemStack incoming = held.Clone();
-            int deposited = Deposit(incoming);
-            if (deposited != held.count)
-            {
-                if (deposited > 0)
-                {
-                    Withdraw(held, deposited);
-                }
-                ItemStack rollback = displayed.Clone();
-                Deposit(rollback);
-                return false;
-            }
-
+            // A swap is all-or-nothing. Failed planning never touches live containers.
+            if (transaction.Plan.Withdraw(displayed, displayed.count) != displayed.count
+                || transaction.Plan.Deposit(held) != held.count || !Commit(transaction)) return false;
             newHeld = displayed.Clone();
             return true;
         }
 
         internal static bool ItemsMatch(ItemStack left, ItemStack right)
         {
-            if (left == null || right == null || left.IsEmpty() || right.IsEmpty())
-            {
-                return (left == null || left.IsEmpty()) && (right == null || right.IsEmpty());
-            }
-            if (left.itemValue.type != right.itemValue.type)
-            {
-                return false;
-            }
-            if (!left.itemValue.ItemClassOrMissing.CanStack())
-            {
-                return left.itemValue.Equals(right.itemValue);
-            }
-
-            ItemStack leftOne = left.Clone();
-            ItemStack rightOne = right.Clone();
-            leftOne.count = 1;
-            rightOne.count = 1;
-            return leftOne.CanStackWith(rightOne, true);
+            return StorageTransferPlan.Matches(left, right);
         }
 
         private void AddToAggregate(ItemStack stack)
@@ -721,54 +542,6 @@ namespace NearbyCraft
             return name ?? string.Empty;
         }
 
-        private long GetDepositCapacity(ItemStack stack)
-        {
-            if (stack == null || stack.IsEmpty() || !stack.itemValue.ItemClassOrMissing.CanPlaceInContainer())
-            {
-                return 0;
-            }
-
-            long capacity = 0;
-            int maxCount = Math.Max(1, stack.itemValue.ItemClassOrMissing.MaxCount);
-            for (int sourceIndex = 0; sourceIndex < sources.Count; sourceIndex++)
-            {
-                StorageSource source = sources[sourceIndex];
-                if (!IsSourceValid(source))
-                {
-                    continue;
-                }
-
-                ItemStack[] slots = source.Storage.items;
-                for (int slotIndex = 0; slotIndex < slots.Length; slotIndex++)
-                {
-                    if (IsSlotLocked(source, slotIndex))
-                    {
-                        continue;
-                    }
-
-                    ItemStack target = slots[slotIndex];
-                    if (target == null || target.IsEmpty())
-                    {
-                        capacity += maxCount;
-                    }
-                    else
-                    {
-                        int transfer;
-                        if (target.CanStackPartlyWith(stack, out transfer))
-                        {
-                            capacity += transfer;
-                        }
-                    }
-
-                    if (capacity >= stack.count)
-                    {
-                        return capacity;
-                    }
-                }
-            }
-            return capacity;
-        }
-
         private bool IsSourceValid(StorageSource source)
         {
             if (source == null || source.Owner == null || source.Storage == null || source.Owner.IsRemoving || source.Owner.IsUserAccessing())
@@ -776,7 +549,8 @@ namespace NearbyCraft
                 return false;
             }
             TileEntity current = world == null ? null : world.GetTileEntity(source.Position);
-            return current == source.Owner && CanAccess(source.Owner) && source.Storage.bPlayerStorage;
+            return current == source.Owner && CanAccess(source.Owner) && source.Storage.bPlayerStorage
+                && source.Storage.items != null;
         }
 
         private bool IsSlotLocked(StorageSource source, int index)
@@ -797,7 +571,7 @@ namespace NearbyCraft
         private static bool IsTerminal(TileEntity tileEntity)
         {
             Block block = tileEntity.block;
-            return block != null && string.Equals(block.GetBlockName(), StorageTerminalManager.BlockName, StringComparison.Ordinal);
+            return StorageTerminalManager.IsTerminal(block);
         }
     }
 }

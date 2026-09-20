@@ -1,0 +1,14 @@
+<Project Sdk="Microsoft.NET.Sdk">
+  <PropertyGroup>
+    <OutputType>Exe</OutputType>
+    <TargetFramework>net8.0</TargetFramework>
+    <EnableDefaultCompileItems>false</EnableDefaultCompileItems>
+    <GamePath Condition="'$(GamePath)' == ''">/home/bradhosk/.local/share/Steam/steamapps/common/7 Days To Die</GamePath>
+  </PropertyGroup>
+  <ItemGroup>
+    <Compile Include="PatchSites.cs" />
+    <Reference Include="Mono.Cecil">
+      <HintPath>$(GamePath)/Mods/0_TFP_Harmony/Mono.Cecil.dll</HintPath>
+    </Reference>
+  </ItemGroup>
+</Project>

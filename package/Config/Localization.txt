@@ -1,3 +1,0 @@
-Key,File,Type,UsedInMainMenu,NoTranslate,KeepLoaded,english
-nearbyCraftStorageTerminal,blocks,Block,,x,,Storage Network Console
-nearbyCraftStorageTerminalDesc,blocks,Block,,x,,A wireless logistics console that combines accessible player storage within range into one searchable and sortable inventory.

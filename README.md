@@ -1,55 +1,114 @@
-# Nearby Craft
+# Nearby Craft 1.3.3
 
-Nearby Craft lets 7 Days to Die use ingredients from inventories within 15 blocks when you craft. It also adds a craftable **Storage Network Console** that combines nearby player storage into one clean inventory screen. It targets game V3.2.
+A local-world quality-of-life mod for **7 Days to Die V3.2 b10**. Craft using nearby supplies and manage a chest network through a searchable Storage Console. Easy Anti-Cheat must be off.
 
-It includes accessible player storage, workstation output slots, collectors, vehicles, and drones. It excludes POI loot, land-claim internals, locked storage you cannot access, locked inventory slots, and containers another player is currently using.
+## Storage consoles and upgrades
 
-The crafting panel has a **NEARBY: ON/OFF** control beside the recipe tabs. Its storage icon and label are green while active and grey while inactive. Clicking it refreshes recipe availability immediately and saves the choice to `config.json`.
+The original console is now **Tier 1**. Existing chests and their contents are not moved or deleted. If a console has more chests nearby than its tier permits, the nearest eligible chests connect first; equal distances use stable position ordering. Extra chests remain accessible normally and are reported as out of capacity.
 
-## Storage Network Console
+| Build / upgrade | Chest limit | Forged steel | Mechanical parts | Electrical parts | Scrap polymers |
+| --- | ---: | ---: | ---: | ---: | ---: |
+| Craft Tier 1 console | 8 | 20 | 10 | 10 | 20 |
+| Tier 1 → 2 kit | 16 | 20 | 10 | 20 | 20 |
+| Tier 2 → 3 kit | 32 | 40 | 20 | 40 | 40 |
+| Tier 3 → 4 kit | 64 | 80 | 40 | 80 | 80 |
 
-Craft the console at a workbench from 20 forged steel, 10 mechanical parts, 10 electrical parts, and 20 scrap polymers. Place it within 15 blocks of player chests or storage crates, then interact with its integrated control panel.
+All recipes are available at the workbench. **Carry one kit**, close the console, fully repair it, then use the repair/upgrade action of a stone axe, claw hammer or nailgun. The game's normal upgrade action consumes one kit. Upgrade sequentially; no Tier 5 exists. Kits cannot be sold to traders.
 
-The terminal shows one virtual inventory backed by the real slots in every accessible player storage container in range. The header reports connected containers, used slots, and total items. You can:
+To move a player-placed console, fully repair it inside your active land-claim area, hold **E**, and choose **Take**. Pickup takes 15 seconds and returns the same console tier; placing it again rebuilds its nearby chest connections at the new location.
 
-- Search by localized or internal item name as you type.
-- Cycle sorting between name, stack count, and item type; the selected mode is saved.
-- Toggle whether the search box receives keyboard focus automatically whenever the console opens.
-- Drag, swap, split, right-click, or shift-click items with the normal game controls.
-- Deposit all unlocked backpack slots with the down-arrow button.
-- Scroll through every matching item with the mouse wheel, draggable scrollbar, or row buttons, and manually rescan after placing or removing a chest.
+Costs double with each capacity step. Higher tiers consolidate more chests into one interface; they do not grant larger chests, extra loot, extended crafting reach or a scan of distant chunks. Building several cheaper Tier 1 consoles remains a valid alternative, but their inventories are separate views.
 
-The terminal does not copy items into itself. Every transfer validates and edits the original chest slots, respects container access and locked slots, and marks only changed tile entities for synchronization.
+All tiers have the same **15-block default range**, configurable between 1 and 30. A fully upgraded console costs 160 steel, 80 mechanical parts, 150 electrical parts and 160 polymers in total, including its original construction. Steel and workbench requirements keep this a mid-game convenience without requiring rare end-game loot.
 
-## Installation
+## Controls and new supply features
 
-1. Start 7 Days to Die with Easy Anti-Cheat disabled.
-2. Extract `NearbyCraft-1.2.0-V3.2.zip` into the game's `Mods` folder.
-3. The resulting path must be `Mods/NearbyCraft/ModInfo.xml`.
-4. For multiplayer, install the same version on the server and every client.
+- Left-drag a normal stack from the console. Right-drag takes half (one item for a single-item stack). Shift-click moves a stack using the normal player inventory rules.
+- Dragged items stay attached to the cursor while crossing other cells. Full/partial transfers use the amount actually transferred, and unlike-item swaps are all-or-nothing.
+- Search by localized or internal name; sort by name, count or type. Sorting and search auto-focus preferences are saved.
+- **DEPOSIT ALL** (green button below the chest grid): left-click to deposit eligible backpack supplies into connected chests, **including supplies in locked backpack slots**. Your toolbelt and personal reserves stay untouched. The slot lock settings themselves are not changed; chest access/slot locks still apply.
+- **MATCHING ONLY:** left-click to deposit only supplies already present in an unlocked connected chest slot. This mode still skips locked backpack slots. It fills matching stacks before empty slots. Ordinary stackable supplies match even when their hidden creation seeds differ.
+- **KEEP:** carry a stack on the cursor and left-click KEEP to reserve that amount of its item type. With the same item held, left-click **CLEAR KEEP** to clear its reserve (right-clicking KEEP also works). The held stack is not consumed. Return it to your backpack afterward.
+- Each deposit reports its moved item count in the footer for six seconds and in the game log. If nothing moves, the footer directs you to check space, locks and reserves.
+- Reserves are totals across eligible backpack slots, not per-stack limits. DEPOSIT ALL counts both locked and unlocked backpack slots toward the reserve; MATCHING ONLY counts unlocked slots. Neither includes the toolbelt. Manual drag/shift-click transfers and crafting remain intentional actions and do not apply bulk-deposit reserves.
+- Refresh manually with the computer icon, or let the console refresh every two seconds while idle. Automatic refresh pauses during a mouse gesture or while carrying a stack.
+- Closing the console returns a carried stack using the game's normal inventory handling; if there is no room, vanilla may drop it at your feet.
+- Move an item to your backpack before using it. Use actions are disabled on the console's virtual cells so food, drink, medicine, books and bundles always update a real inventory slot.
 
-Do not run this together with Beyond Storage, ProxiCraft, Craft From Containers, or another mod that changes crafting inventory lookup.
+The console excludes land-claim maintenance storage, all console internal inventories, inaccessible locked containers, and containers in use. It closes if its block disappears, the player moves more than eight blocks away, or a remote player joins.
+
+Nearby crafting still includes accessible player storage, workstation outputs, collectors, vehicles and drones within its own range. Console chest caps do **not** limit nearby crafting.
+
+## Safety and compatibility
+
+**Storage operations are solo/local-world only in this release.** The old client-side multiplayer transfers lacked server-authoritative coordination. On a remote server, or while another client is connected to your hosted game, nearby crafting falls back to vanilla and the console cannot transfer items. Installing the mod on every client does not make it multiplayer-safe.
+
+Terminal operations plan on cloned inventories, validate the source contents and slot locks, then commit only changed slots. Bulk deposit marks each affected chest once. Item metadata is retained rather than merging different variants. This is a synchronous local-world transaction, not a network transaction protocol.
+
+The mod checks the expected V3.2 crafting patch sites at startup. A mismatch removes all of this mod's Harmony patches and disables nearby crafting for that session. Review the game log before using it after a game update.
+
+Do not combine with Beyond Storage, ProxiCraft, Craft From Containers or another mod that changes the same crafting/storage behavior. Broader remote repair/refuel and workstation automation are not part of this storage-focused release.
+
+## Installation and updating
+
+1. Close the game and back up saves, generated worlds and the old mod.
+2. Start the game with Easy Anti-Cheat disabled.
+3. Download `NearbyCraft-1.3.3-V3.2.zip` from the [v1.3.3 release](https://github.com/OpenNerdz/NearbyCraft/releases/tag/v1.3.3), then extract it into `Mods` so the manifest is `Mods/NearbyCraft/ModInfo.xml`.
+4. Preserve your existing `config.json` when updating. Missing settings use defaults.
+5. Test the controls and upgrades in a disposable world before using valuable supplies.
+
+The terminal's original block name is retained, so existing consoles do not require replacement. The localization file is now correctly named `Localization.csv`; remove the obsolete `Localization.txt` when replacing an old installation.
 
 ## Configuration
 
-Edit `Mods/NearbyCraft/config.json` while the game is closed. `Range` controls nearby crafting and `TerminalRange` controls console connections; both are clamped to 1–30 blocks. `CacheMilliseconds` is clamped to 100–2000 ms. The nearby-crafting toggle, console sort mode, and search auto-focus preference are saved to this file when changed in the UI.
+Edit `Mods/NearbyCraft/config.json` while the game is closed.
 
-The default 250 ms snapshot is refreshed only when crafting code asks for it. There is no `Update` patch, background thread, coroutine, or whole-world scan. At the default range, only nearby loaded chunks are checked; source lists and item-count dictionaries are reused to limit garbage collection.
+- `Range` and `TerminalRange`: 1–30 blocks; default 15.
+- `CacheMilliseconds`: 100–2000 ms; default 250.
+- `RespectLockedSlots`: protects chest slot locks when enabled (default true). Independently, MATCHING ONLY protects backpack locks, while DEPOSIT ALL includes their contents.
+- `PersonalReserves`: internal item names mapped to quantities, e.g. `{"ammo9mmBulletBall": 150}`. The KEEP control sets these without editing JSON.
+- Existing source toggles, sorting and autofocus preferences are preserved.
 
-The terminal scans nearby loaded chunks once when opened and only scans again when you press its refresh button. Searching, sorting, and scrolling use its in-memory item index. The scroll view is virtualized, so it keeps only 54 item cells active even for very large networks. A transfer rebuilds the index from the already-connected containers; it does not search the world again.
+UI preference changes use a temporary file and retain the previous configuration as `config.json.bak`. Nearby crafting scans only loaded chunks when needed; ingredient removal reuses a batch snapshot instead of rescanning for every ingredient.
 
-## Building
+## Automatic backups on this Linux/Proton machine
 
-The project references the DLLs from a local V3.2 installation. If your game is elsewhere, run:
+The companion `tools/backup_saves.py` runs independently of the game mod. The installed user timer checks every five minutes while logged in and backs up changed data **only while the game is closed**. It includes Saves, GeneratedWorlds and Mods, verifies SHA-256 hashes, and keeps the latest eight archives. It does not copy running saves or restore anything automatically.
+
+- Configuration: `~/.config/NearbyCraft/backup.json`
+- Backups: `~/.local/share/NearbyCraft/backups/`
+- Status: `systemctl --user status nearbycraft-backup.timer`
+- Run now: `systemctl --user start nearbycraft-backup.service`
+- Disable: `systemctl --user disable --now nearbycraft-backup.timer`
+
+Verify an archive with `python3 tools/backup_saves.py --verify /path/to/archive.zip`. For recovery, close the game, verify the archive, extract it to a separate folder, then copy the required save/world and matching mod files back to the paths recorded in `manifest.json`. Keep the current files separately first. An archive's `data/` folder corresponds to the configured game user-data root.
+
+These are local backups, not protection from drive failure. The timer is configured for the currently used Proton save folder; update it if you switch to native Linux or move the game data.
+
+## Build and verification
 
 ```bash
 dotnet build -c Release -p:GamePath="/path/to/7 Days To Die"
+dotnet run --project tests/TransferTests.csproj -c Release
+dotnet run --project tests/PatchSites.csproj -- "/path/to/7 Days To Die"
+python3 tools/verify_package.py "/path/to/7 Days To Die"
+python3 -m unittest discover -s tests -p 'test_*.py' -v
 ```
 
-The installable archive is written to `dist/NearbyCraft-1.2.0-V3.2.zip`.
+The XML checker uses Python's lxml package. Planner tests compile the production transfer/rules code against minimal item stubs, including 3,000 randomized conservation cases. Patch-site tests inspect the installed game DLL without executing it. Backup tests include restore-to-temp, retention and refusal during gameplay.
 
-## Compatibility
+**These checks do not replace an in-game UI/playtest.** The mouse drag/drop experience, visual layout and native upgrade animation still need live confirmation. See `TESTING.md` for the short acceptance checklist.
 
-Nearby Craft uses Harmony, so Easy Anti-Cheat must be disabled. Major 7 Days to Die updates can change method layouts; startup checks log an explicit error if the expected V3.2 crafting sites no longer match.
+### 1.3.1 deposit hotfix
 
-Concept and compatibility research referenced the MIT-licensed CraftFromContainers and ProxiCraft projects and the Apache-2.0-licensed Beyond Storage projects. This implementation is purpose-built for nearby crafting and storage-network management.
+V3.2 routes left-click through `OnPress` with ID -1 and right-click through `OnRightPress` with ID -2. Version 1.3.0 subscribed only to the left-click event and incorrectly tested for mouse button 1, so its advertised right-click deposit-all action never ran. It also compared hidden item creation seeds when matching ordinary stackable supplies. The labelled left-click buttons and seed-aware supply matching fix those defects; snapshot validation still compares exact values to reject stale transfers. Regression tests cover both mistakes.
+
+### 1.3.2 Deposit All backpack-lock behavior
+
+DEPOSIT ALL now includes locked backpack slots as requested. MATCHING ONLY retains its lock protection. Personal reserves, toolbelt contents, chest access and chest slot-lock handling are unchanged. Regression tests check both modes, reserve accounting and item conservation.
+
+### 1.3.3 terminal use-action fix
+
+Use actions are disabled on the console's virtual item cells. Move food, drink, medicine, books or bundles to the backpack before using them. This prevents vanilla from applying an effect while decrementing only the terminal's read-only display instead of the real chest stack.
+
+Research referenced the MIT-licensed CraftFromContainers and ProxiCraft projects and Apache-2.0-licensed Beyond Storage projects; this implementation is purpose-built.

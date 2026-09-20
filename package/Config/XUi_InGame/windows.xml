@@ -7,7 +7,7 @@
   </append>
 
   <append xpath="/windows">
-    <window name="nearbyCraftStorageTerminal" width="606" height="548" panel="Left" cursor_area="true">
+    <window name="nearbyCraftStorageTerminal" width="606" height="590" panel="Left" cursor_area="true">
       <rect name="header" height="43" depth="1">
         <headerbg />
         <sprite depth="3" name="windowIcon" style="icon32px" pivot="center" pos="21,-21" sprite="ui_game_symbol_computer" />
@@ -26,7 +26,6 @@
         <button depth="5" name="nearbyCraftTerminalAutoFocus" pos="339,-24" sprite="ui_game_symbol_search" style="icon30px, press, hover" pivot="center" selected="{terminal_autofocus_enabled}" defaultcolor="[disabledLabelColor]" selectedcolor="[green]" tooltip="{terminal_autofocus_tooltip}" sound="[paging_click]" />
         <label depth="4" pos="357,-13" width="70" height="28" text="{terminal_sort}" font_size="17" justify="right" color="[lightGrey]" />
         <button depth="5" name="nearbyCraftTerminalSort" pos="447,-24" sprite="ui_game_symbol_sort" style="icon30px, press, hover" pivot="center" tooltip="Change and save sorting" sound="[paging_click]" />
-        <button depth="5" name="nearbyCraftTerminalDeposit" pos="499,-24" sprite="ui_game_symbol_store_all_down" style="icon30px, press, hover" pivot="center" tooltip="Deposit all unlocked backpack items" sound="[paging_click]" />
         <button depth="5" name="nearbyCraftTerminalRefresh" pos="558,-24" sprite="ui_game_symbol_computer" style="icon30px, press, hover" pivot="center" tooltip="Rescan connected storage" sound="[paging_click]" />
       </rect>
 
@@ -47,6 +46,21 @@
         <button depth="4" name="nearbyCraftTerminalScrollUp" pos="450,-22" sprite="ui_game_symbol_arrow_left" rotation="90" style="icon30px, press, hover" pivot="center" enabled="{terminal_can_scroll_up}" disabledcolor="[darkGrey]" tooltip="Scroll up one row" sound="[paging_click]" />
         <label depth="3" name="scrollRange" pos="466,-10" width="105" height="25" text="{terminal_scroll_range}" font_size="16" justify="center" />
         <button depth="4" name="nearbyCraftTerminalScrollDown" pos="590,-22" sprite="ui_game_symbol_arrow_left" rotation="-90" style="icon30px, press, hover" pivot="center" enabled="{terminal_can_scroll_down}" disabledcolor="[darkGrey]" tooltip="Scroll down one row" sound="[paging_click]" />
+      </rect>
+      <rect name="supplyControls" pos="0,-552" width="606" height="38" depth="2">
+        <sprite depth="1" color="[darkGrey]" type="sliced" width="606" height="38" />
+        <button depth="4" name="nearbyCraftTerminalDeposit" pos="5,-3" width="165" height="32" sprite="menu_empty" defaultcolor="45,85,45,255" hovercolor="65,115,65,255" hoverscale="1" style="press, hover" tooltip="Deposit backpack supplies INCLUDING locked backpack slots. Keeps toolbelt and personal reserves. Chest locks still apply." sound="[paging_click]">
+          <label depth="1" pos="82,-16" pivot="center" width="163" height="30" text="DEPOSIT ALL" justify="center" font_size="20" />
+        </button>
+        <button depth="4" name="nearbyCraftTerminalDepositMatching" pos="176,-3" width="173" height="32" sprite="menu_empty" defaultcolor="80,80,80,255" hovercolor="110,110,110,255" hoverscale="1" style="press, hover" tooltip="Deposit matching supplies only. Skips locked backpack slots and keeps toolbelt and personal reserves." sound="[paging_click]">
+          <label depth="1" pos="86,-16" pivot="center" width="171" height="30" text="MATCHING ONLY" justify="center" font_size="19" />
+        </button>
+        <button depth="4" name="nearbyCraftTerminalReserve" pos="355,-3" width="107" height="32" sprite="menu_empty" defaultcolor="80,80,80,255" hovercolor="110,110,110,255" hoverscale="1" style="press, hover" tooltip="Hold a stack, then click KEEP to keep that amount in your backpack during bulk deposit." sound="[paging_click]">
+          <label depth="1" pos="53,-16" pivot="center" width="105" height="30" text="KEEP" justify="center" font_size="20" />
+        </button>
+        <button depth="4" name="nearbyCraftTerminalClearReserve" pos="468,-3" width="133" height="32" sprite="menu_empty" defaultcolor="80,80,80,255" hovercolor="110,110,110,255" hoverscale="1" style="press, hover" tooltip="Hold an item stack, then click to clear that item's personal reserve." sound="[paging_click]">
+          <label depth="1" pos="66,-16" pivot="center" width="131" height="30" text="CLEAR KEEP" justify="center" font_size="19" />
+        </button>
       </rect>
     </window>
   </append>

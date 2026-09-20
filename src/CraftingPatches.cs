@@ -91,7 +91,7 @@ namespace NearbyCraft
 
             if (appendCount != 1 || helperCount != 2)
             {
-                Log.Error("[NearbyCraft] V3.2 craft-availability patch did not match the expected game code ({0} stack hooks, {1} checks).", appendCount, helperCount);
+                throw new InvalidOperationException("Craft-availability patch mismatch: " + appendCount + " stack hooks, " + helperCount + " checks.");
             }
             return codes;
         }
@@ -139,7 +139,7 @@ namespace NearbyCraft
 
             if (replacements != 2)
             {
-                Log.Error("[NearbyCraft] V3.2 ingredient-removal patch expected 2 calls and found {0}.", replacements);
+                throw new InvalidOperationException("Ingredient-removal patch expected 2 calls; found " + replacements);
             }
             return codes;
         }
@@ -174,7 +174,7 @@ namespace NearbyCraft
 
             if (hooks != 2)
             {
-                Log.Error("[NearbyCraft] V3.2 maximum-craft-count patch expected 2 branches and found {0}.", hooks);
+                throw new InvalidOperationException("Maximum-craft-count patch expected 2 branches; found " + hooks);
             }
             return codes;
         }
@@ -215,7 +215,7 @@ namespace NearbyCraft
 
             if (hooks != 6)
             {
-                Log.Error("[NearbyCraft] V3.2 ingredient-display patch expected 6 count sites and found {0}.", hooks);
+                throw new InvalidOperationException("Ingredient-display patch expected 6 sites; found " + hooks);
             }
             return codes;
         }

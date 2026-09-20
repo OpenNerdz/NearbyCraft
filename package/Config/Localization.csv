@@ -1,0 +1,15 @@
+Key,File,Type,UsedInMainMenu,NoTranslate,KeepLoaded,english
+nearbyCraftStorageTerminal,blocks,Block,,x,,Storage Console - Tier 1 (8 Chests)
+nearbyCraftStorageTerminalDesc,blocks,Block,,x,,Connects the nearest 8 accessible player chests within 15 blocks by default. Upgrade in place with a Tier 2 kit and a repair tool. Close the console before upgrading. Other chests remain usable directly.
+nearbyCraftStorageTerminalTier2,blocks,Block,,x,,Storage Console - Tier 2 (16 Chests)
+nearbyCraftStorageTerminalTier2Desc,blocks,Block,,x,,Connects up to 16 chests. Same range as Tier 1. Upgrade in place with a Tier 3 kit and a repair tool.
+nearbyCraftStorageTerminalTier3,blocks,Block,,x,,Storage Console - Tier 3 (32 Chests)
+nearbyCraftStorageTerminalTier3Desc,blocks,Block,,x,,Connects up to 32 chests. Same range as Tier 1. Upgrade in place with a Tier 4 kit and a repair tool.
+nearbyCraftStorageTerminalTier4,blocks,Block,,x,,Storage Console - Tier 4 (64 Chests)
+nearbyCraftStorageTerminalTier4Desc,blocks,Block,,x,,Connects up to 64 chests. Same range as Tier 1. Maximum tier.
+nearbyCraftTerminalUpgrade2,items,Item,,x,,Storage Console Upgrade Kit - Tier 2
+nearbyCraftTerminalUpgrade2Desc,items,Item,,x,,Carry one kit and use the repair action of a stone axe or hammer or nailgun on a fully repaired Tier 1 console. Doubles its capacity to 16 chests. Consumed on upgrade.
+nearbyCraftTerminalUpgrade3,items,Item,,x,,Storage Console Upgrade Kit - Tier 3
+nearbyCraftTerminalUpgrade3Desc,items,Item,,x,,Carry one kit and use a repair tool on a fully repaired Tier 2 console. Doubles its capacity to 32 chests. Consumed on upgrade.
+nearbyCraftTerminalUpgrade4,items,Item,,x,,Storage Console Upgrade Kit - Tier 4
+nearbyCraftTerminalUpgrade4Desc,items,Item,,x,,Carry one kit and use a repair tool on a fully repaired Tier 3 console. Doubles its capacity to 64 chests. Consumed on upgrade.

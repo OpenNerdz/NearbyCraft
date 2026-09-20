@@ -1,0 +1,8 @@
+<Project>
+  <PropertyGroup>
+    <!-- These two executable projects share a source directory, but must not
+         share generated apphosts or incremental-build state. -->
+    <BaseIntermediateOutputPath>obj/$(MSBuildProjectName)/</BaseIntermediateOutputPath>
+    <BaseOutputPath>bin/$(MSBuildProjectName)/</BaseOutputPath>
+  </PropertyGroup>
+</Project>

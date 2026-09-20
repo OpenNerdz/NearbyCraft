@@ -14,10 +14,15 @@ namespace NearbyCraft
         public int TerminalRange = 15;
         public string TerminalSort = "Name";
         public bool TerminalAutoFocusSearch = true;
+        public System.Collections.Generic.Dictionary<string, int> PersonalReserves = new System.Collections.Generic.Dictionary<string, int>();
         public bool DebugLogging = false;
 
         internal void Validate()
         {
+            if (PersonalReserves == null)
+                PersonalReserves = new System.Collections.Generic.Dictionary<string, int>();
+            foreach (string key in new System.Collections.Generic.List<string>(PersonalReserves.Keys))
+                PersonalReserves[key] = System.Math.Max(0, System.Math.Min(1000000, PersonalReserves[key]));
             if (Range < 1)
             {
                 Range = 1;

@@ -7,8 +7,18 @@ namespace NearbyCraft
 {
     internal static class StorageTerminalManager
     {
-        internal const string BlockName = "nearbyCraftStorageTerminal";
+        internal const string BlockName = TerminalRules.BlockName;
         internal const string WindowGroupId = "nearbycraft_storage_terminal";
+
+        internal static int GetTier(Block block)
+        {
+            return block == null ? 0 : TerminalRules.GetTier(block.GetBlockName());
+        }
+
+        internal static bool IsTerminal(Block block)
+        {
+            return GetTier(block) > 0;
+        }
 
         internal static StorageNetworkSession ActiveSession { get; private set; }
         internal static XUiC_StorageTerminalWindowGroup ActiveWindow { get; private set; }
@@ -57,6 +67,10 @@ namespace NearbyCraft
         private XUiC_StorageTerminalGrid grid;
         private XUiC_TextInput searchInput;
         private XUiV_ScrollBar scrollBar;
+        private float nextRefresh;
+        private bool previousCursorMenu;
+        private string actionMessage;
+        private float actionMessageUntil;
 
         public override void Init()
         {
@@ -71,7 +85,10 @@ namespace NearbyCraft
 
             BindButton("nearbyCraftTerminalSort", SortPressed);
             BindButton("nearbyCraftTerminalAutoFocus", AutoFocusPressed);
-            BindButton("nearbyCraftTerminalDeposit", DepositPressed);
+            BindButton("nearbyCraftTerminalDeposit", DepositAllPressed);
+            BindButton("nearbyCraftTerminalDepositMatching", DepositMatchingPressed);
+            BindButton("nearbyCraftTerminalReserve", ReservePressed, true);
+            BindButton("nearbyCraftTerminalClearReserve", ClearReservePressed);
             BindButton("nearbyCraftTerminalRefresh", RefreshPressed);
             BindButton("nearbyCraftTerminalScrollUp", ScrollUpPressed);
             BindButton("nearbyCraftTerminalScrollDown", ScrollDownPressed);
@@ -92,6 +109,24 @@ namespace NearbyCraft
 
         public override void Update(float dt)
         {
+            if (session != null)
+            {
+                if (!session.IsAvailable)
+                {
+                    xui.playerUI.windowManager.Close(StorageTerminalManager.WindowGroupId);
+                    return;
+                }
+                xui.DragAndDropWindow.InMenu = true;
+                // Don't move cells underneath a held mouse button or carried stack.
+                if (Time.realtimeSinceStartup >= nextRefresh && xui.DragAndDropWindow.CurrentStack.IsEmpty()
+                    && !Input.GetMouseButton(0) && !Input.GetMouseButton(1))
+                {
+                    nextRefresh = Time.realtimeSinceStartup + 2f;
+                    session.Rescan();
+                    grid.RefreshFromSession();
+                    SetAllChildrenDirty();
+                }
+            }
             base.Update(dt);
             if (session == null || scrollBar == null || session.MaxScrollRow <= 0)
             {
@@ -136,6 +171,10 @@ namespace NearbyCraft
             }
 
             base.OnOpen();
+            actionMessage = null;
+            previousCursorMenu = xui.DragAndDropWindow.InMenu;
+            xui.DragAndDropWindow.InMenu = true;
+            nextRefresh = Time.realtimeSinceStartup + 2f;
             if (grid != null)
             {
                 grid.RefreshFromSession();
@@ -148,6 +187,11 @@ namespace NearbyCraft
 
         public override void OnClose()
         {
+            if (xui != null && xui.DragAndDropWindow != null)
+            {
+                xui.DragAndDropWindow.PlaceItemBackInInventory();
+                xui.DragAndDropWindow.InMenu = previousCursorMenu;
+            }
             base.OnClose();
             if (xui != null && xui.playerUI != null)
             {
@@ -174,14 +218,20 @@ namespace NearbyCraft
             }
         }
 
-        private void BindButton(string id, XUiEvent_OnPressEventHandler handler)
+        private void BindButton(string id, XUiEvent_OnPressEventHandler handler, bool rightClick = false)
         {
             XUiController button = GetChildById(id);
             if (button != null)
             {
                 button.OnPress -= handler;
                 button.OnPress += handler;
+                if (rightClick)
+                {
+                    button.OnRightPress -= handler;
+                    button.OnRightPress += handler;
+                }
             }
+            else Log.Error("[NearbyCraft] Terminal button was not found: {0}", id);
         }
 
         private void SearchChanged(XUiController sender, string text, bool changeFromCode)
@@ -227,17 +277,52 @@ namespace NearbyCraft
             SetAllChildrenDirty();
         }
 
-        private void DepositPressed(XUiController sender, int mouseButton)
+        private void DepositAllPressed(XUiController sender, int mouseButton)
         {
-            if (session == null)
-            {
-                return;
-            }
-            int moved = session.DepositBackpack(xui.PlayerInventory);
+            DepositBackpack(false);
+        }
+
+        private void DepositMatchingPressed(XUiController sender, int mouseButton)
+        {
+            DepositBackpack(true);
+        }
+
+        private void DepositBackpack(bool matchingOnly)
+        {
+            if (session == null) return;
+            int moved = session.DepositBackpack(xui.PlayerInventory, matchingOnly);
+            Log.Out("[NearbyCraft] {0}: moved {1} items across {2} connected chests.",
+                matchingOnly ? "Matching deposit" : "Deposit all", moved, session.ConnectedStorageCount);
+            actionMessage = moved > 0 ? "DEPOSITED " + moved + " ITEMS"
+                : matchingOnly ? "NO MATCHES / SPACE; CHECK LOCKS & RESERVES"
+                : "NOTHING MOVED; CHECK CHEST SPACE & RESERVES";
+            actionMessageUntil = Time.realtimeSinceStartup + 6f;
             grid.RefreshFromSession();
             SetAllChildrenDirty();
-            GameManager.ShowTooltip(xui.playerUI.entityPlayer,
-                moved > 0 ? "Deposited " + moved + " items into the storage network" : "No items could be deposited");
+            GameManager.ShowTooltip(xui.playerUI.entityPlayer, actionMessage);
+        }
+
+        private void ReservePressed(XUiController sender, int mouseButton)
+        {
+            SetReserve(TerminalRules.IsRightClick(mouseButton));
+        }
+
+        private void ClearReservePressed(XUiController sender, int mouseButton)
+        {
+            SetReserve(true);
+        }
+
+        private void SetReserve(bool clear)
+        {
+            ItemStack held = xui.DragAndDropWindow.CurrentStack;
+            if (held == null || held.IsEmpty())
+            {
+                GameManager.ShowTooltip(xui.playerUI.entityPlayer, "Hold an item stack, then click KEEP to reserve that amount or CLEAR KEEP to clear its reserve.");
+                return;
+            }
+            NearbyCraftMod.SetReserve(held, clear);
+            GameManager.ShowTooltip(xui.playerUI.entityPlayer, clear ? "Reserve cleared for this item"
+                : "Bulk deposit will keep " + held.count + " of this item in eligible backpack slots.");
         }
 
         private void RefreshPressed(XUiController sender, int mouseButton)
@@ -320,16 +405,21 @@ namespace NearbyCraft
             switch (bindingName)
             {
                 case "terminal_status":
-                    if (session == null || session.ConnectedStorageCount == 0)
+                    if (!string.IsNullOrEmpty(actionMessage) && Time.realtimeSinceStartup < actionMessageUntil)
+                    {
+                        value = actionMessage;
+                        return true;
+                    }
+                    if (session == null)
                     {
                         int radius = NearbyCraftMod.Config == null ? 15 : NearbyCraftMod.Config.TerminalRange;
                         value = "0 CONNECTED  •  Place storage within " + radius + " blocks";
                     }
                     else
                     {
-                        value = session.ConnectedStorageCount + " CONNECTED  •  "
-                            + session.UsedSlotCount + "/" + session.TotalSlotCount + " SLOTS  •  "
-                            + session.TotalItemCount + " ITEMS";
+                        value = "T" + session.Tier + "  •  " + session.ConnectedStorageCount + "/" + session.ChestLimit + " CHESTS  •  "
+                            + (session.OverflowCount > 0 ? "+" + session.OverflowCount + " OUT OF CAP"
+                                : session.ConnectedStorageCount == 0 ? "PLACE CHESTS IN RANGE" : session.TotalItemCount + " ITEMS");
                     }
                     return true;
                 case "terminal_sort":
@@ -340,8 +430,8 @@ namespace NearbyCraft
                     return true;
                 case "terminal_autofocus_color":
                     value = NearbyCraftMod.Config == null || NearbyCraftMod.Config.TerminalAutoFocusSearch
-                        ? "[green]"
-                        : "[disabledLabelColor]";
+                        ? "70,190,90,255"
+                        : "125,125,125,255";
                     return true;
                 case "terminal_autofocus_tooltip":
                     value = NearbyCraftMod.Config == null || NearbyCraftMod.Config.TerminalAutoFocusSearch
@@ -424,13 +514,9 @@ namespace NearbyCraft
                 return;
             }
 
-            ItemStack previous = displayed[slotNumber] ?? ItemStack.Empty;
-            ItemStack current = stack ?? ItemStack.Empty;
-            if (session.ApplyDisplayChange(previous, current))
-            {
-                refreshRequested = true;
-            }
-            displayed[slotNumber] = current.Clone();
+            // This grid is a projection, never an inventory. All mutations must go
+            // through the validated cursor/shift-click transaction paths.
+            refreshRequested = true;
         }
 
         public override ItemStack[] GetSlots()
@@ -449,19 +535,20 @@ namespace NearbyCraft
         public override bool CanSwap(ItemStack stack)
         {
             StorageNetworkSession session = StorageTerminalManager.ActiveSession;
-            return session != null && session.CanDepositAfterWithdraw(ItemStack, stack);
+            return !StackLock && session != null && (stack.IsEmpty()
+                || (stack.CanMoveTo(StackLocation, SlotNumber) && session.CanDepositAfterWithdraw(ItemStack, stack)));
         }
 
         public override void SwapItem()
         {
             StorageNetworkSession session = StorageTerminalManager.ActiveSession;
-            if (session == null)
+            if (session == null || StackLock)
             {
                 return;
             }
 
             ItemStack held = xui.DragAndDropWindow.CurrentStack;
-            if (!held.IsEmpty() && !held.itemValue.ItemClassOrMissing.CanPlaceInContainer())
+            if (!held.IsEmpty() && (!held.CanMoveTo(StackLocation, SlotNumber) || !held.itemValue.ItemClassOrMissing.CanPlaceInContainer()))
             {
                 Manager.PlayInsidePlayerHead("ui_denied");
                 GameManager.ShowTooltip(xui.playerUI.entityPlayer, "Quest Items cannot be placed in containers.");
@@ -488,11 +575,24 @@ namespace NearbyCraft
             StorageTerminalManager.RequestItemsRefresh();
         }
 
+        internal void PickUpHalf()
+        {
+            StorageNetworkSession session = StorageTerminalManager.ActiveSession;
+            if (session == null || StackLock || ItemStack.IsEmpty() || !xui.DragAndDropWindow.CurrentStack.IsEmpty()) return;
+            int amount = session.Withdraw(ItemStack, Math.Max(1, ItemStack.count / 2));
+            if (amount <= 0) return;
+            ItemStack held = ItemStack.Clone();
+            held.count = amount;
+            xui.DragAndDropWindow.CurrentStack = held;
+            xui.DragAndDropWindow.PickUpType = StackLocationTypes.LootContainer;
+            StorageTerminalManager.RequestItemsRefresh();
+        }
+
         public override void HandleDropOne()
         {
             StorageNetworkSession session = StorageTerminalManager.ActiveSession;
             ItemStack held = xui.DragAndDropWindow.CurrentStack;
-            if (session == null || held == null || held.IsEmpty())
+            if (session == null || StackLock || held == null || held.IsEmpty() || !held.CanMoveTo(StackLocation, SlotNumber))
             {
                 return;
             }

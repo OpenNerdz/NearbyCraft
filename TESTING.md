@@ -1,0 +1,19 @@
+# NearbyCraft 1.3.3 acceptance checks
+
+Automated checks cover the production transaction planner, tier/reserve rules, XML patch targets, recipe references, upgrade tool allow-lists, localization, patch-site metadata and closed-game backups. They do not launch Unity or simulate mouse input.
+
+Use a disposable local world with EAC disabled. Do not use your main save as the first test.
+
+1. Open a Tier 1 console near nine chests. Confirm 8/8 connected and one out of capacity. Move/remove a connected chest; the next nearest should connect on idle refresh. Contents of the excluded chest must remain accessible directly.
+2. Drag a stack across several terminal cells to the backpack. Only the initially picked stack should move. Repeat with a half-stack, a single non-stackable item and right-click placement. Close with an item held; confirm the item returns, or drops normally if inventory is full.
+3. With a full network, try depositing and swapping. Confirm actual counts on both sides, no displayed phantom items, and no change for an impossible swap. Test backpack/toolbelt shift-click, restricted items and a locked chest slot.
+4. Confirm the labelled DEPOSIT ALL and MATCHING ONLY buttons appear beneath the chest grid. Left-click DEPOSIT ALL: eligible backpack supplies, including locked backpack slots, should enter the chests and a moved count should appear in the footer and log. The backpack lock toggles themselves must remain set. Put one supply type in a chest, then collect another stack of that supply separately (different creation seed). MATCHING ONLY should recognize it and leave unrelated supplies and locked backpack slots behind. Both buttons must preserve the toolbelt and saved reserves; locked destination chest slots must remain protected. Repeat with full chests and check the zero-moved feedback.
+5. Hold 150 ammunition and click KEEP. Put it back. With 250 in unlocked backpack slots, bulk deposit should leave 150. Hold ammunition and left-click CLEAR KEEP to clear the reserve, then test again. Also test the right-click KEEP shortcut. Reopen the game to confirm the preference persists.
+6. Carry one appropriate kit and use a repair tool on the fully repaired console. Test each step: 8 → 16 → 32 → 64. Exactly one kit should be consumed per step, ownership/lock behavior retained, and no further upgrade offered at Tier 4. Verify a damaged console repairs before upgrading. At each tier, place the console inside an active land claim, hold E, choose Take, and confirm the 15-second pickup returns the same tier. Re-place it and confirm its nearby chest connections rebuild. Confirm Take is unavailable outside the active land claim and while the console is damaged.
+7. Place a land-claim block nearby. Its maintenance supplies must not enter the console network or nearby-crafting counts. Existing supplies are not deleted by exclusion.
+8. Craft several ingredient types from player inventory plus nearby storage. Confirm the recipe queue and actual ingredient consumption. Toggle nearby crafting off and repeat using vanilla inventory only.
+9. Select food, drink, medicine, a readable item or a bundle in the console. Its Use action must be disabled and clicking it must direct you to move the item to the backpack. Move it first, then use it normally and confirm the real stack decreases once.
+10. Join a remote game, or have a second client join a host. Confirm remote storage actions are blocked and ordinary crafting still works. Do not use multiplayer until this check is confirmed.
+11. Inspect the new game log for NearbyCraft patch failures, XML errors, color-parse warnings and exceptions. Close the game, wait for the backup timer, and verify the resulting archive.
+
+The pre-update archive and old installed-mod directory should remain available until these checks pass. Do not downgrade a world containing Tier 2–4 consoles or upgrade kits without first restoring its matching pre-update save.

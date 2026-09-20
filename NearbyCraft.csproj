@@ -4,9 +4,9 @@
     <LangVersion>7.3</LangVersion>
     <AssemblyName>NearbyCraft</AssemblyName>
     <RootNamespace>NearbyCraft</RootNamespace>
-    <Version>1.2.0</Version>
-    <AssemblyVersion>1.2.0.0</AssemblyVersion>
-    <FileVersion>1.2.0.0</FileVersion>
+    <Version>1.3.3</Version>
+    <AssemblyVersion>1.3.3.0</AssemblyVersion>
+    <FileVersion>1.3.3.0</FileVersion>
     <Deterministic>true</Deterministic>
     <GenerateDocumentationFile>false</GenerateDocumentationFile>
     <DebugType>none</DebugType>
@@ -16,6 +16,7 @@
   </PropertyGroup>
 
   <ItemGroup>
+    <Compile Remove="tests/**/*.cs" />
     <PackageReference Include="Microsoft.NETFramework.ReferenceAssemblies" Version="1.0.3" PrivateAssets="all" />
     <PackageFile Include="package/**/*" />
   </ItemGroup>
@@ -27,6 +28,10 @@
     </Reference>
     <Reference Include="UnityEngine.CoreModule">
       <HintPath>$(ManagedPath)/UnityEngine.CoreModule.dll</HintPath>
+      <Private>false</Private>
+    </Reference>
+    <Reference Include="UnityEngine.InputLegacyModule">
+      <HintPath>$(ManagedPath)/UnityEngine.InputLegacyModule.dll</HintPath>
       <Private>false</Private>
     </Reference>
     <Reference Include="LogLibrary">
@@ -57,11 +62,11 @@
       <StageRoot>$(MSBuildProjectDirectory)/dist/stage</StageRoot>
       <StageMod>$(StageRoot)/NearbyCraft</StageMod>
       <StageXUi>$(StageMod)/Config/XUi_InGame</StageXUi>
-      <ReleaseZip>$(MSBuildProjectDirectory)/dist/NearbyCraft-1.2.0-V3.2.zip</ReleaseZip>
+      <ReleaseZip>$(MSBuildProjectDirectory)/dist/NearbyCraft-$(Version)-V3.2.zip</ReleaseZip>
     </PropertyGroup>
     <RemoveDir Directories="$(StageRoot)" />
     <MakeDir Directories="$(StageMod);$(StageXUi)" />
-    <Copy SourceFiles="$(TargetPath);$(MSBuildProjectDirectory)/README.md;$(MSBuildProjectDirectory)/LICENSE"
+    <Copy SourceFiles="$(TargetPath);$(MSBuildProjectDirectory)/README.md;$(MSBuildProjectDirectory)/TESTING.md;$(MSBuildProjectDirectory)/LICENSE"
           DestinationFolder="$(StageMod)" />
     <Copy SourceFiles="@(PackageFile)"
           DestinationFiles="@(PackageFile->'$(StageMod)/%(RecursiveDir)%(Filename)%(Extension)')" />

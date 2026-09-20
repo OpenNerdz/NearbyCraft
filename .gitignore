@@ -3,3 +3,5 @@ obj/
 dist/
 *.user
 *.suo
+__pycache__/
+*.pyc

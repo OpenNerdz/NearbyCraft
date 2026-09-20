@@ -45,6 +45,7 @@ namespace NearbyCraft
         private static Vector3 lastPlayerPosition;
         private static int lastPlayerId = -1;
         private static bool rebuilding;
+        private static bool Enabled { get { return config.Enabled && NearbyCraftMod.CanUseLocalStorage; } }
 
         internal static void Configure(NearbyCraftConfig value)
         {
@@ -72,7 +73,7 @@ namespace NearbyCraft
 
         internal static List<ItemStack> AppendAvailableStacks(List<ItemStack> destination)
         {
-            if (destination == null || !config.Enabled)
+            if (destination == null || !Enabled)
             {
                 return destination;
             }
@@ -102,7 +103,7 @@ namespace NearbyCraft
 
         internal static ItemStack[] AppendAvailableStacks(ItemStack[] existing)
         {
-            if (!config.Enabled)
+            if (!Enabled)
             {
                 return existing;
             }
@@ -136,7 +137,7 @@ namespace NearbyCraft
                 return false;
             }
 
-            if (!config.Enabled)
+            if (!Enabled)
             {
                 return inventory.HasItems(required, multiplier);
             }
@@ -175,7 +176,7 @@ namespace NearbyCraft
                 return false;
             }
 
-            if (!config.Enabled)
+            if (!Enabled)
             {
                 return grid.HasItems(required, multiplier);
             }
@@ -208,12 +209,13 @@ namespace NearbyCraft
 
         internal static void RemoveItems(XUiM_PlayerInventory inventory, IList<ItemStack> required, int multiplier, IList<ItemStack> removedItems)
         {
-            if (!config.Enabled)
+            if (!Enabled)
             {
                 inventory.RemoveItems(required, multiplier, removedItems);
                 return;
             }
 
+            EnsureFresh(false);
             for (int i = 0; i < required.Count; i++)
             {
                 ItemStack requiredStack = required[i];
@@ -240,12 +242,13 @@ namespace NearbyCraft
 
         internal static void RemoveItems(XUiC_WorkstationInputGrid grid, IList<ItemStack> required, int multiplier, IList<ItemStack> removedItems)
         {
-            if (!config.Enabled)
+            if (!Enabled)
             {
                 grid.RemoveItems(required, multiplier, removedItems);
                 return;
             }
 
+            EnsureFresh(false);
             for (int i = 0; i < required.Count; i++)
             {
                 ItemStack requiredStack = required[i];
@@ -271,7 +274,6 @@ namespace NearbyCraft
 
         private static int RemoveFromStorage(ItemValue itemValue, int requested, IList<ItemStack> removedItems)
         {
-            EnsureFresh(false);
             int remaining = requested;
 
             for (int sourceIndex = 0; sourceIndex < Sources.Count && remaining > 0; sourceIndex++)
@@ -336,7 +338,7 @@ namespace NearbyCraft
 
         private static void EnsureFresh(bool force)
         {
-            if (!config.Enabled || rebuilding)
+            if (!Enabled || rebuilding)
             {
                 return;
             }
@@ -408,7 +410,8 @@ namespace NearbyCraft
                     for (int i = 0; i < tileEntities.Count; i++)
                     {
                         TileEntity tileEntity = tileEntities[i];
-                        if (tileEntity == null || tileEntity.IsRemoving || tileEntity.IsUserAccessing())
+                        if (tileEntity == null || tileEntity.IsRemoving || tileEntity.IsUserAccessing()
+                            || StorageTerminalManager.IsTerminal(tileEntity.block))
                         {
                             continue;
                         }
@@ -582,7 +585,7 @@ namespace NearbyCraft
 
         private static bool CanUse(ItemValue itemValue)
         {
-            return config.Enabled && itemValue != null && !itemValue.IsEmpty();
+            return Enabled && itemValue != null && !itemValue.IsEmpty();
         }
 
         private static int SafeRequiredCount(int count, int multiplier)

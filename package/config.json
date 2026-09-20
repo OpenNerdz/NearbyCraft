@@ -11,5 +11,6 @@
   "TerminalRange": 15,
   "TerminalSort": "Name",
   "TerminalAutoFocusSearch": true,
+  "PersonalReserves": {},
   "DebugLogging": false
 }

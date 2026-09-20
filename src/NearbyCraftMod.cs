@@ -10,10 +10,22 @@ namespace NearbyCraft
     public sealed class NearbyCraftMod : IModApi
     {
         internal const string ModName = "NearbyCraft";
-        internal const string ModVersion = "1.2.0";
+        internal const string ModVersion = "1.3.2";
+        internal static bool PatchesReady { get; private set; }
 
         internal static NearbyCraftConfig Config { get; private set; }
         private static string configPath;
+
+        // Direct inventory writes are safe only in a local world with no remote clients.
+        // A real server-authoritative protocol is required before enabling multiplayer.
+        internal static bool CanUseLocalStorage
+        {
+            get
+            {
+                ConnectionManager connection = SingletonMonoBehaviour<ConnectionManager>.Instance;
+                return PatchesReady && connection != null && connection.IsSinglePlayer;
+            }
+        }
 
         public void InitMod(Mod mod)
         {
@@ -25,11 +37,16 @@ namespace NearbyCraft
                 WarnAboutConflicts();
                 var harmony = new Harmony("bradhosk.nearbycraft");
                 harmony.PatchAll(Assembly.GetExecutingAssembly());
+                PatchesReady = true;
                 Log.Out("[NearbyCraft] v{0} loaded for {1}. Craft range: {2}; terminal range: {3}; snapshot cache: {4} ms.",
                     ModVersion, Constants.cVersionInformation.LongString, Config.Range, Config.TerminalRange, Config.CacheMilliseconds);
             }
             catch (Exception exception)
             {
+                new Harmony("bradhosk.nearbycraft").UnpatchSelf();
+                PatchesReady = false;
+                Config.Enabled = false;
+                StorageIndex.Configure(Config);
                 Log.Error("[NearbyCraft] Harmony patches could not be applied: {0}", exception);
             }
         }
@@ -61,6 +78,7 @@ namespace NearbyCraft
 
         internal static void SetEnabled(bool enabled)
         {
+            if (!PatchesReady) return;
             if (Config == null || Config.Enabled == enabled)
             {
                 return;
@@ -94,13 +112,25 @@ namespace NearbyCraft
             SaveConfig();
         }
 
+        internal static void SetReserve(ItemStack stack, bool clear)
+        {
+            if (Config == null || stack == null || stack.IsEmpty()) return;
+            string name = stack.itemValue.ItemClassOrMissing.GetItemName();
+            if (clear) Config.PersonalReserves.Remove(name);
+            else Config.PersonalReserves[name] = stack.count;
+            SaveConfig();
+        }
+
         private static void SaveConfig()
         {
             try
             {
                 if (!string.IsNullOrEmpty(configPath))
                 {
-                    File.WriteAllText(configPath, JsonConvert.SerializeObject(Config, Formatting.Indented));
+                    string temporaryPath = configPath + ".tmp";
+                    File.WriteAllText(temporaryPath, JsonConvert.SerializeObject(Config, Formatting.Indented));
+                    if (File.Exists(configPath)) File.Replace(temporaryPath, configPath, configPath + ".bak");
+                    else File.Move(temporaryPath, configPath);
                 }
             }
             catch (Exception exception)

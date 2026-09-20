@@ -6,5 +6,23 @@
       <ingredient name="resourceElectricParts" count="10" />
       <ingredient name="resourceScrapPolymers" count="20" />
     </recipe>
+    <recipe name="nearbyCraftTerminalUpgrade2" count="1" craft_time="60" craft_area="workbench" always_unlocked="true" tags="workbenchCrafting">
+      <ingredient name="resourceForgedSteel" count="20" />
+      <ingredient name="resourceMechanicalParts" count="10" />
+      <ingredient name="resourceElectricParts" count="20" />
+      <ingredient name="resourceScrapPolymers" count="20" />
+    </recipe>
+    <recipe name="nearbyCraftTerminalUpgrade3" count="1" craft_time="120" craft_area="workbench" always_unlocked="true" tags="workbenchCrafting">
+      <ingredient name="resourceForgedSteel" count="40" />
+      <ingredient name="resourceMechanicalParts" count="20" />
+      <ingredient name="resourceElectricParts" count="40" />
+      <ingredient name="resourceScrapPolymers" count="40" />
+    </recipe>
+    <recipe name="nearbyCraftTerminalUpgrade4" count="1" craft_time="240" craft_area="workbench" always_unlocked="true" tags="workbenchCrafting">
+      <ingredient name="resourceForgedSteel" count="80" />
+      <ingredient name="resourceMechanicalParts" count="40" />
+      <ingredient name="resourceElectricParts" count="80" />
+      <ingredient name="resourceScrapPolymers" count="80" />
+    </recipe>
   </append>
 </configs>
