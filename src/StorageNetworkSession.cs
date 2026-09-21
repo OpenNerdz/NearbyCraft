@@ -5,14 +5,7 @@ using UnityEngine;
 
 namespace NearbyCraft
 {
-    internal enum StorageTerminalSort : byte
-    {
-        Name,
-        Count,
-        Type
-    }
-
-    internal sealed class StorageNetworkSession
+    internal sealed partial class StorageNetworkSession
     {
         private sealed class StorageSource
         {
@@ -20,12 +13,6 @@ namespace NearbyCraft
             internal ITileEntityLootable Storage;
             internal Vector3i Position;
             internal float DistanceSquared;
-        }
-
-        private sealed class AggregateBucket
-        {
-            internal ItemValue ItemValue;
-            internal long Count;
         }
 
         private sealed class SourceDistanceComparer : IComparer<StorageSource>
@@ -53,11 +40,11 @@ namespace NearbyCraft
         private readonly Vector3i interactionPosition;
         private readonly int range;
         private readonly bool respectLockedSlots;
+        private readonly bool automation;
+        internal bool AutomationBusy { get; private set; }
         private readonly List<StorageSource> sources = new List<StorageSource>(32);
-        private readonly List<AggregateBucket> buckets = new List<AggregateBucket>(128);
-        private readonly Dictionary<int, List<AggregateBucket>> bucketsByType = new Dictionary<int, List<AggregateBucket>>(128);
-        private readonly List<ItemStack> allItems = new List<ItemStack>(128);
-        private readonly List<ItemStack> filteredItems = new List<ItemStack>(128);
+        private TerminalCatalog catalog; // Created only for a UI/counting session, never ore-only export.
+        private readonly List<TerminalCatalog.Entry> filteredItems = new List<TerminalCatalog.Entry>(128);
         internal int Tier { get; private set; }
         internal int ChestLimit { get { return TerminalRules.ChestLimit(Tier); } }
         internal int OverflowCount { get; private set; }
@@ -67,7 +54,9 @@ namespace NearbyCraft
             {
                 return NearbyCraftMod.CanUseLocalStorage && world != null && player != null
                     && StorageTerminalManager.IsTerminal(world.GetBlock(terminalPosition).Block)
-                    && (player.position - interactionPosition.ToVector3()).sqrMagnitude <= 64f;
+                    && world.GetTileEntity(terminalPosition) != null
+                    && CanAccess(world.GetTileEntity(terminalPosition))
+                    && (automation || (player.position - interactionPosition.ToVector3()).sqrMagnitude <= 64f);
             }
         }
 
@@ -88,12 +77,13 @@ namespace NearbyCraft
         internal StorageTerminalSort Sort { get { return sort; } }
 
         internal StorageNetworkSession(World world, EntityPlayerLocal player, Vector3i terminalPosition, NearbyCraftConfig config,
-            Vector3i? interactionPosition = null)
+            Vector3i? interactionPosition = null, bool automation = false)
         {
             this.world = world;
             this.player = player;
             this.terminalPosition = terminalPosition;
             this.interactionPosition = interactionPosition ?? terminalPosition;
+            this.automation = automation;
             Tier = StorageTerminalManager.GetTier(world.GetBlock(terminalPosition).Block);
             range = config == null ? 15 : config.TerminalRange;
             respectLockedSlots = config == null || config.RespectLockedSlots;
@@ -105,13 +95,15 @@ namespace NearbyCraft
             }
         }
 
-        internal void Rescan()
+        internal void Rescan(bool includeItemCatalog = true)
         {
             sources.Clear();
             OverflowCount = 0;
+            AutomationBusy = false;
             if (!IsAvailable)
             {
-                RebuildItems();
+                if (includeItemCatalog) RebuildItems();
+                else ConnectedStorageCount = 0;
                 return;
             }
 
@@ -138,7 +130,7 @@ namespace NearbyCraft
                         for (int i = 0; i < tileEntities.Count; i++)
                         {
                             TileEntity tileEntity = tileEntities[i];
-                            if (tileEntity == null || tileEntity.IsRemoving || tileEntity.IsUserAccessing())
+                            if (tileEntity == null || tileEntity.IsRemoving || (!automation && tileEntity.IsUserAccessing()))
                             {
                                 continue;
                             }
@@ -147,6 +139,7 @@ namespace NearbyCraft
                             TEFeatureLandClaim landClaim;
                             if (position == terminalPosition || IsTerminal(tileEntity)
                                 || LoadoutLockerManager.IsLocker(world.GetBlock(position).Block)
+                                || WorkshopManager.IsController(world.GetBlock(position).Block)
                                 || (tileEntity.TryGetSelfOrFeature<TEFeatureLandClaim>(out landClaim) && landClaim != null))
                             {
                                 continue;
@@ -168,6 +161,7 @@ namespace NearbyCraft
                                 continue;
                             }
 
+                            if (automation && tileEntity.IsUserAccessing()) AutomationBusy = true;
                             sources.Add(new StorageSource
                             {
                                 Owner = tileEntity,
@@ -189,14 +183,14 @@ namespace NearbyCraft
                 Log.Warning("[NearbyCraft] Storage terminal scan failed safely: {0}", exception.Message);
             }
 
-            RebuildItems();
+            if (includeItemCatalog) RebuildItems();
+            else ConnectedStorageCount = sources.Count;
         }
 
         internal void RebuildItems()
         {
-            buckets.Clear();
-            bucketsByType.Clear();
-            allItems.Clear();
+            if (catalog == null) catalog = new TerminalCatalog(GetDisplayName, s => s.itemValue.ItemClassOrMissing.GetItemName());
+            catalog.Clear();
             ConnectedStorageCount = 0;
             UsedSlotCount = 0;
             TotalSlotCount = 0;
@@ -229,34 +223,24 @@ namespace NearbyCraft
 
                     UsedSlotCount++;
                     TotalItemCount += stack.count;
-                    AddToAggregate(stack);
-                }
-            }
-
-            for (int i = 0; i < buckets.Count; i++)
-            {
-                AggregateBucket bucket = buckets[i];
-                int maxCount = Math.Max(1, bucket.ItemValue.ItemClassOrMissing.MaxCount);
-                long remaining = bucket.Count;
-                while (remaining > 0)
-                {
-                    int count = (int)Math.Min(maxCount, remaining);
-                    allItems.Add(new ItemStack(bucket.ItemValue.Clone(), count));
-                    remaining -= count;
+                    catalog.Add(stack);
                 }
             }
 
             RebuildFilter();
         }
 
-        internal ItemStack[] GetVisibleStacks()
+        internal ItemStack[] GetVisibleStacks(out long[] totals)
         {
             var result = ItemStack.CreateArray(VisibleSlotCount);
+            totals = new long[VisibleSlotCount];
             int start = FirstVisibleIndex;
             int count = Math.Min(VisibleSlotCount, filteredItems.Count - start);
             for (int i = 0; i < count; i++)
             {
-                result[i] = filteredItems[start + i].Clone();
+                var entry = filteredItems[start + i];
+                result[i] = entry.TransferStack();
+                totals[i] = entry.Count;
             }
             return result;
         }
@@ -273,9 +257,9 @@ namespace NearbyCraft
             RebuildFilter();
         }
 
-        internal void CycleSort()
+        internal void SetSort(StorageTerminalSort value)
         {
-            sort = (StorageTerminalSort)(((int)sort + 1) % 3);
+            sort = value;
             scrollRow = 0;
             RebuildFilter();
         }
@@ -304,13 +288,13 @@ namespace NearbyCraft
             internal readonly List<bool[]> Locks = new List<bool[]>();
         }
 
-        private Transaction BeginTransaction()
+        private Transaction BeginTransaction(TileEntity excludedSource = null)
         {
             var transaction = new Transaction();
             if (!IsAvailable) return transaction;
             foreach (StorageSource source in sources)
             {
-                if (!IsSourceValid(source)) continue;
+                if (source.Owner == excludedSource || !IsSourceValid(source)) continue;
                 ItemStack[] slots = source.Storage.items;
                 var locks = new bool[slots.Length];
                 for (int i = 0; i < locks.Length; i++) locks[i] = IsSlotLocked(source, i);
@@ -322,18 +306,21 @@ namespace NearbyCraft
             return transaction;
         }
 
-        private bool Commit(Transaction transaction, Func<bool> extraValidation = null)
+        private bool Commit(Transaction transaction, Func<bool> extraValidation = null, Action applyOtherSlots = null)
         {
-            if (!IsAvailable) return false;
-            if (extraValidation != null && !extraValidation()) return false;
-            if (!transaction.Plan.TryCommit(index =>
+            if (!CanCommit(transaction, extraValidation)) return false;
+            try
             {
-                StorageSource source = transaction.Sources[index];
-                if (!IsSourceValid(source) || !ReferenceEquals(source.Storage.items, transaction.Slots[index])) return false;
-                for (int i = 0; i < transaction.Locks[index].Length; i++)
-                    if (IsSlotLocked(source, i) != transaction.Locks[index][i]) return false;
-                return true;
-            })) return false;
+                if (!transaction.Plan.TryCommit(index => IsTransactionSourceValid(transaction, index))) return false;
+            }
+            catch (Exception exception)
+            {
+                Log.Warning("[NearbyCraft] Storage transaction commit validation failed safely: {0}", exception.Message);
+                return false;
+            }
+            // Workshop callers supply only prevalidated array/field assignments.
+            // Finish both inventories before any SetModified callbacks can run.
+            if (applyOtherSlots != null) applyOtherSlots();
             for (int i = 0; i < transaction.Sources.Count; i++)
             {
                 if (!transaction.Plan.Changed(i)) continue;
@@ -350,18 +337,72 @@ namespace NearbyCraft
             return true;
         }
 
+        private bool CanCommit(Transaction transaction, Func<bool> extraValidation = null)
+        {
+            try
+            {
+                return transaction != null && IsAvailable && (!automation || !AutomationBusy)
+                    && (extraValidation == null || extraValidation())
+                    && transaction.Plan.CanCommit(index => IsTransactionSourceValid(transaction, index));
+            }
+            catch (Exception exception)
+            {
+                Log.Warning("[NearbyCraft] Storage transaction validation failed safely: {0}", exception.Message);
+                return false;
+            }
+        }
+
+        private bool IsTransactionSourceValid(Transaction transaction, int index)
+        {
+            StorageSource source = transaction.Sources[index];
+            if (!IsSourceValid(source) || !ReferenceEquals(source.Storage.items, transaction.Slots[index])) return false;
+            for (int i = 0; i < transaction.Locks[index].Length; i++)
+                if (IsSlotLocked(source, i) != transaction.Locks[index][i]) return false;
+            return true;
+        }
+
         internal bool TryExchangeLoadout(IList<ItemStack> current, IList<ItemStack> target,
-            Func<bool> playerStillValid, out LoadoutSwapResult result)
+            Func<bool> playerStillValid, Action applyPlayer, Action rollbackPlayer, out LoadoutSwapResult result)
         {
             Transaction transaction = BeginTransaction();
             if (!LoadoutSwapPlanner.TryPlan(current, target, transaction.Plan, out result)) return false;
-            if (!Commit(transaction, playerStillValid))
+            if (!CanCommit(transaction, playerStillValid))
             {
                 result.Error = "The player or storage network changed during the swap. Nothing was moved.";
                 return false;
             }
+            try { applyPlayer(); }
+            catch (Exception exception)
+            {
+                bool restored = TryRollback(rollbackPlayer, "loadout apply", exception);
+                result.Error = restored ? "The player inventory rejected the loadout. Nothing was moved."
+                    : "The player inventory rejected the loadout and could not be restored. Check the game log.";
+                return false;
+            }
+            if (!Commit(transaction))
+            {
+                bool restored = TryRollback(rollbackPlayer, "loadout commit", null);
+                result.Error = restored ? "The storage network changed during the swap. The player inventory was restored."
+                    : "The storage network changed and the player inventory could not be restored. Check the game log.";
+                return false;
+            }
             RebuildItems();
             return true;
+        }
+
+        private static bool TryRollback(Action rollback, string operation, Exception cause)
+        {
+            if (cause != null) Log.Error("[NearbyCraft] {0} failed before storage commit: {1}", operation, cause);
+            try
+            {
+                rollback();
+                return true;
+            }
+            catch (Exception exception)
+            {
+                Log.Error("[NearbyCraft] {0} rollback failed: {1}", operation, exception);
+                return false;
+            }
         }
 
         internal int Deposit(ItemStack stack)
@@ -387,7 +428,7 @@ namespace NearbyCraft
         internal int DepositBackpack(XUiM_PlayerInventory inventory, bool matchingOnly)
         {
             if (inventory == null || player == null) return 0;
-            ItemStack[] current = inventory.GetBackpackItemStacks();
+            ItemStack[] current = ItemStack.Clone(inventory.GetBackpackItemStacks());
             ItemStack[] updated = ItemStack.Clone(current);
             PackedBoolArray locked = inventory.Backpack.LockedSlots;
             int slotLimit = Math.Min(updated.Length, player.CarryCapacity);
@@ -411,8 +452,18 @@ namespace NearbyCraft
                 stack.count -= deposited;
                 if (stack.count == 0) updated[i] = ItemStack.Empty.Clone();
             }
-            if (moved == 0 || !Commit(transaction)) return 0;
-            inventory.SetBackpackItemStacks(updated);
+            if (moved == 0 || !SameSlots(current, inventory.GetBackpackItemStacks()) || !CanCommit(transaction)) return 0;
+            try { inventory.SetBackpackItemStacks(ItemStack.Clone(updated)); }
+            catch (Exception exception)
+            {
+                TryRollback(() => inventory.SetBackpackItemStacks(ItemStack.Clone(current)), "backpack deposit apply", exception);
+                return 0;
+            }
+            if (!Commit(transaction))
+            {
+                TryRollback(() => inventory.SetBackpackItemStacks(ItemStack.Clone(current)), "backpack deposit commit", null);
+                return 0;
+            }
             RebuildItems();
             return moved;
         }
@@ -460,94 +511,11 @@ namespace NearbyCraft
             return StorageTransferPlan.Matches(left, right);
         }
 
-        private void AddToAggregate(ItemStack stack)
-        {
-            List<AggregateBucket> typeBuckets;
-            if (!bucketsByType.TryGetValue(stack.itemValue.type, out typeBuckets))
-            {
-                typeBuckets = new List<AggregateBucket>(1);
-                bucketsByType.Add(stack.itemValue.type, typeBuckets);
-            }
-
-            if (stack.itemValue.ItemClassOrMissing.CanStack())
-            {
-                for (int i = 0; i < typeBuckets.Count; i++)
-                {
-                    AggregateBucket existing = typeBuckets[i];
-                    if (ItemsMatch(new ItemStack(existing.ItemValue, 1), stack))
-                    {
-                        existing.Count += stack.count;
-                        return;
-                    }
-                }
-            }
-
-            var bucket = new AggregateBucket
-            {
-                ItemValue = stack.itemValue.Clone(),
-                Count = stack.count
-            };
-            typeBuckets.Add(bucket);
-            buckets.Add(bucket);
-        }
-
         private void RebuildFilter()
         {
-            filteredItems.Clear();
-            for (int i = 0; i < allItems.Count; i++)
-            {
-                ItemStack stack = allItems[i];
-                if (MatchesSearch(stack))
-                {
-                    filteredItems.Add(stack);
-                }
-            }
-
-            filteredItems.Sort(CompareItems);
+            if (catalog == null) { filteredItems.Clear(); scrollRow = 0; return; }
+            catalog.FilterAndSort(search, sort, filteredItems);
             scrollRow = Math.Max(0, Math.Min(MaxScrollRow, scrollRow));
-        }
-
-        private int CompareItems(ItemStack left, ItemStack right)
-        {
-            int result;
-            switch (sort)
-            {
-                case StorageTerminalSort.Count:
-                    result = right.count.CompareTo(left.count);
-                    if (result != 0)
-                    {
-                        return result;
-                    }
-                    return string.Compare(GetDisplayName(left), GetDisplayName(right), StringComparison.OrdinalIgnoreCase);
-                case StorageTerminalSort.Type:
-                    result = left.itemValue.type.CompareTo(right.itemValue.type);
-                    if (result != 0)
-                    {
-                        return result;
-                    }
-                    return right.count.CompareTo(left.count);
-                default:
-                    result = string.Compare(GetDisplayName(left), GetDisplayName(right), StringComparison.OrdinalIgnoreCase);
-                    if (result != 0)
-                    {
-                        return result;
-                    }
-                    return right.count.CompareTo(left.count);
-            }
-        }
-
-        private bool MatchesSearch(ItemStack stack)
-        {
-            if (string.IsNullOrEmpty(search))
-            {
-                return true;
-            }
-
-            ItemClass itemClass = stack.itemValue.ItemClassOrMissing;
-            string internalName = itemClass.GetItemName() ?? string.Empty;
-            string displayName = GetDisplayName(stack);
-            return internalName.IndexOf(search, StringComparison.OrdinalIgnoreCase) >= 0
-                || displayName.IndexOf(search, StringComparison.OrdinalIgnoreCase) >= 0;
         }
 
         private static string GetDisplayName(ItemStack stack)

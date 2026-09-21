@@ -10,7 +10,7 @@ namespace NearbyCraft
     public sealed class NearbyCraftMod : IModApi
     {
         internal const string ModName = "NearbyCraft";
-        internal const string ModVersion = "1.4.0";
+        internal const string ModVersion = "1.8.0";
         internal static bool PatchesReady { get; private set; }
 
         internal static NearbyCraftConfig Config { get; private set; }
@@ -31,6 +31,7 @@ namespace NearbyCraft
         {
             Config = LoadConfig(mod.Path);
             LoadoutProfileStore.Initialize(mod.Path);
+            WorkshopStore.Initialize(mod.Path);
             StorageIndex.Configure(Config);
 
             try
@@ -39,6 +40,10 @@ namespace NearbyCraft
                 var harmony = new Harmony("bradhosk.nearbycraft");
                 harmony.PatchAll(Assembly.GetExecutingAssembly());
                 PatchesReady = true;
+                ModEvents.GameUpdate.RegisterHandler(WorkshopManager.Update);
+#if NEARBYCRAFT_GAMEPLAY_QA
+                ModEvents.UnityUpdate.RegisterHandler(NearbyCraftGameplayQa.Update);
+#endif
                 Log.Out("[NearbyCraft] v{0} loaded for {1}. Craft range: {2}; terminal range: {3}; snapshot cache: {4} ms.",
                     ModVersion, Constants.cVersionInformation.LongString, Config.Range, Config.TerminalRange, Config.CacheMilliseconds);
             }

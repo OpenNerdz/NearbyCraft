@@ -94,7 +94,8 @@ namespace NearbyCraft
             {
                 Equipment = ItemStack.CreateArray(equipmentSlots),
                 Toolbelt = ItemStack.Clone(inventory.GetToolbeltItemStacks()),
-                Backpack = ItemStack.Clone(inventory.GetBackpackItemStacks())
+                Backpack = ItemStack.Clone(inventory.GetBackpackItemStacks()),
+                PreparedEquipment = player.equipment.Clone()
             };
             for (int i = 0; i < equipmentSlots; i++)
             {
@@ -454,7 +455,9 @@ namespace NearbyCraft
             session.Rescan();
             LoadoutSwapResult result;
             if (!session.TryExchangeLoadout(currentManaged, targetManaged,
-                () => before.MatchesLive(player, inventory), out result))
+                () => before.MatchesLive(player, inventory),
+                () => target.Apply(player, inventory),
+                () => before.Apply(player, inventory), out result))
             {
                 string detail = DescribeProblem(result);
                 Show(string.IsNullOrEmpty(detail) ? result.Error : result.Error + " " + detail);
@@ -462,20 +465,9 @@ namespace NearbyCraft
                 return;
             }
 
-            try
-            {
-                target.Apply(player, inventory);
-                Show("Loadout " + (index + 1) + " equipped: " + result.Withdrawn + " withdrawn, "
-                    + result.Deposited + " deposited.");
-                Manager.PlayInsidePlayerHead("ui_skill_purchase");
-            }
-            catch (Exception exception)
-            {
-                // All compatibility checks and staging happen before the network
-                // commit; native setters are expected not to fail on this thread.
-                Log.Error("[NearbyCraft] Storage committed but the staged player loadout could not be applied: {0}", exception);
-                Show("The network committed, but the player inventory refresh failed. Close the game and restore a backup before continuing.");
-            }
+            Show("Loadout " + (index + 1) + " equipped: " + result.Withdrawn + " withdrawn, "
+                + result.Deposited + " deposited.");
+            Manager.PlayInsidePlayerHead("ui_skill_purchase");
             SetAllChildrenDirty();
         }
 

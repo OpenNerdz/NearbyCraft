@@ -1,4 +1,5 @@
 using System;
+using System.Globalization;
 using Audio;
 using UnityEngine;
 using UnityEngine.Scripting;
@@ -62,6 +63,8 @@ namespace NearbyCraft
     public sealed class XUiC_StorageTerminalWindowGroup : XUiController
     {
         private Vector3i terminalPosition;
+        private Vector3i interactionPosition;
+        private Vector3i productionPosition;
         private bool hasTerminalPosition;
         private StorageNetworkSession session;
         private XUiC_StorageTerminalGrid grid;
@@ -83,7 +86,9 @@ namespace NearbyCraft
                 searchInput.OnSubmitHandler += SearchSubmitted;
             }
 
-            BindButton("nearbyCraftTerminalSort", SortPressed);
+            BindButton("nearbyCraftTerminalSort", (sender, mouse) => QuickSort(StorageTerminalSort.Name));
+            BindButton("nearbyCraftTerminalSortCount", (sender, mouse) => QuickSort(StorageTerminalSort.Count));
+            BindButton("nearbyCraftTerminalSortType", (sender, mouse) => QuickSort(StorageTerminalSort.Type));
             BindButton("nearbyCraftTerminalAutoFocus", AutoFocusPressed);
             BindButton("nearbyCraftTerminalDeposit", DepositAllPressed);
             BindButton("nearbyCraftTerminalDepositMatching", DepositMatchingPressed);
@@ -92,6 +97,7 @@ namespace NearbyCraft
             BindButton("nearbyCraftTerminalRefresh", RefreshPressed);
             BindButton("nearbyCraftTerminalScrollUp", ScrollUpPressed);
             BindButton("nearbyCraftTerminalScrollDown", ScrollDownPressed);
+            BindButton("nearbyCraftTerminalProduction", (sender, mouse) => OpenProduction());
 
             XUiController scrollBarController = GetChildById("nearbyCraftTerminalScrollbar");
             scrollBar = scrollBarController == null ? null : scrollBarController.ViewComponent as XUiV_ScrollBar;
@@ -111,7 +117,11 @@ namespace NearbyCraft
         {
             if (session != null)
             {
-                if (!session.IsAvailable)
+                var world = GameManager.Instance.World;
+                if (!session.IsAvailable || !WorkshopManager.IsManager(world.GetBlock(interactionPosition).Block)
+                    || !WorkshopManager.Accessible(world.GetTileEntity(interactionPosition))
+                    || (terminalPosition.ToVector3() - interactionPosition.ToVector3()).sqrMagnitude
+                        > NearbyCraftMod.Config.TerminalRange * NearbyCraftMod.Config.TerminalRange)
                 {
                     xui.playerUI.windowManager.Close(StorageTerminalManager.WindowGroupId);
                     return;
@@ -127,6 +137,7 @@ namespace NearbyCraft
                     SetAllChildrenDirty();
                 }
             }
+            if (session != null && IsDirty) { RefreshBindingsSelfAndChildren(); IsDirty = false; }
             base.Update(dt);
             if (session == null || scrollBar == null || session.MaxScrollRow <= 0)
             {
@@ -141,10 +152,35 @@ namespace NearbyCraft
             }
         }
 
-        internal void SetTerminal(Vector3i position)
+        internal void SetTerminal(Vector3i position, Vector3i? interaction = null, Vector3i? production = null)
         {
             terminalPosition = position;
+            interactionPosition = interaction ?? position;
+            productionPosition = production ?? position;
             hasTerminalPosition = true;
+        }
+
+        private void OpenProduction()
+        {
+            if (session == null || !session.IsAvailable || !xui.DragAndDropWindow.CurrentStack.IsEmpty()) return;
+            var world = GameManager.Instance.World;
+            // Existing linked controllers retain their settings and remain the
+            // authority when the console is used as another access screen.
+            if (productionPosition == terminalPosition && WorkshopStore.Get(productionPosition) == null)
+            {
+                foreach (var c in WorkshopStore.Controllers)
+                    if (c.Linked && c.Console == terminalPosition && WorkshopManager.IsManager(world.GetBlock(c.Position).Block)
+                        && WorkshopManager.Accessible(world.GetTileEntity(c.Position))
+                        && (c.Position.ToVector3() - terminalPosition.ToVector3()).sqrMagnitude
+                            <= NearbyCraftMod.Config.TerminalRange * NearbyCraftMod.Config.TerminalRange)
+                    { productionPosition = c.Position; break; }
+            }
+            var group = xui.FindWindowGroupByName(WorkshopManager.WindowGroupId) as XUiC_WorkshopWindowGroup;
+            if (group == null) return;
+            group.SetPosition(productionPosition, interactionPosition);
+            var wm = xui.playerUI.windowManager;
+            wm.Close(StorageTerminalManager.WindowGroupId);
+            wm.Open(WorkshopManager.WindowGroupId, true);
         }
 
         public override void OnOpen()
@@ -152,7 +188,7 @@ namespace NearbyCraft
             World world = GameManager.Instance == null ? null : GameManager.Instance.World;
             EntityPlayerLocal player = xui == null || xui.playerUI == null ? null : xui.playerUI.entityPlayer;
             session = hasTerminalPosition && world != null && player != null
-                ? new StorageNetworkSession(world, player, terminalPosition, NearbyCraftMod.Config)
+                ? new StorageNetworkSession(world, player, terminalPosition, NearbyCraftMod.Config, interactionPosition)
                 : null;
 
             if (session != null)
@@ -250,13 +286,18 @@ namespace NearbyCraft
             SearchChanged(sender, text, false);
         }
 
-        private void SortPressed(XUiController sender, int mouseButton)
+        private void QuickSort(StorageTerminalSort mode)
         {
             if (session == null)
             {
                 return;
             }
-            session.CycleSort();
+            if (!xui.DragAndDropWindow.CurrentStack.IsEmpty())
+            {
+                GameManager.ShowTooltip(xui.playerUI.entityPlayer, "Put down the held stack before sorting.");
+                return;
+            }
+            session.SetSort(mode);
             NearbyCraftMod.SetTerminalSort(session.Sort);
             grid.RefreshFromSession();
             SetAllChildrenDirty();
@@ -425,6 +466,14 @@ namespace NearbyCraft
                 case "terminal_sort":
                     value = session == null ? "NAME" : session.Sort.ToString().ToUpperInvariant();
                     return true;
+                case "terminal_sort_name_color":
+                case "terminal_sort_count_color":
+                case "terminal_sort_type_color":
+                    var selected = session == null ? StorageTerminalSort.Name : session.Sort;
+                    bool active = bindingName == "terminal_sort_name_color" ? selected == StorageTerminalSort.Name
+                        : bindingName == "terminal_sort_count_color" ? selected == StorageTerminalSort.Count : selected == StorageTerminalSort.Type;
+                    value = active ? "55,105,65,255" : "60,70,75,255";
+                    return true;
                 case "terminal_autofocus_enabled":
                     value = (NearbyCraftMod.Config == null || NearbyCraftMod.Config.TerminalAutoFocusSearch).ToString();
                     return true;
@@ -440,7 +489,7 @@ namespace NearbyCraft
                     return true;
                 case "terminal_scroll_range":
                     value = session == null || session.ResultCount == 0
-                        ? "0 ITEMS"
+                        ? "0 ENTRIES"
                         : (session.FirstVisibleIndex + 1) + "-" + session.LastVisibleIndex + " / " + session.ResultCount;
                     return true;
                 case "terminal_can_scroll_up":
@@ -463,6 +512,7 @@ namespace NearbyCraft
     {
         private StorageNetworkSession session;
         private ItemStack[] displayed = ItemStack.CreateArray(StorageNetworkSession.VisibleSlotCount);
+        private long[] displayedTotals = new long[StorageNetworkSession.VisibleSlotCount];
         private bool refreshRequested;
 
         public override XUiC_ItemStack.StackLocationTypes StackLocation
@@ -484,9 +534,12 @@ namespace NearbyCraft
         internal void RefreshFromSession()
         {
             refreshRequested = false;
-            displayed = session == null
-                ? ItemStack.CreateArray(StorageNetworkSession.VisibleSlotCount)
-                : session.GetVisibleStacks();
+            if (session == null)
+            {
+                displayed = ItemStack.CreateArray(StorageNetworkSession.VisibleSlotCount);
+                displayedTotals = new long[StorageNetworkSession.VisibleSlotCount];
+            }
+            else displayed = session.GetVisibleStacks(out displayedTotals);
             SetStacks(displayed);
             IsDirty = true;
             XUiC_StorageTerminalWindowGroup owner = GetParentByType<XUiC_StorageTerminalWindowGroup>();
@@ -524,6 +577,11 @@ namespace NearbyCraft
             return ItemStack.Clone(displayed);
         }
 
+        internal long GetDisplayedTotal(int slot)
+        {
+            return slot >= 0 && slot < displayedTotals.Length ? displayedTotals[slot] : 0;
+        }
+
         public override void UpdateBackend(ItemStack[] stackList)
         {
         }
@@ -532,6 +590,41 @@ namespace NearbyCraft
     [Preserve]
     public sealed class XUiC_StorageTerminalItemStack : XUiC_ItemStack
     {
+        public override void Init()
+        {
+            base.Init();
+            var control = GetChildById("stackValue");
+            var countLabel = control == null ? null : control.ViewComponent as XUiV_Label;
+            if (countLabel != null)
+            {
+                countLabel.MaxLineCount = 1;
+                countLabel.Overflow = UILabel.Overflow.ShrinkContent;
+            }
+        }
+
+        public override bool GetBindingValueInternal(ref string value, string bindingName)
+        {
+            // The vanilla itemcount binding normally shows only the capped stack.
+            // Override its TEXT, never the physical stack handed to vanilla UI.
+            if ((bindingName == "itemcount" || bindingName == "tooltip") && ItemStack != null && !ItemStack.IsEmpty())
+            {
+                var owner = GetParentByType<XUiC_StorageTerminalGrid>();
+                long total = owner == null ? ItemStack.count : owner.GetDisplayedTotal(SlotNumber);
+                if (bindingName == "itemcount" && !ShowDurability)
+                {
+                    value = total > 1 || ItemStack.itemValue.ItemClassOrMissing.CanStack() ? TerminalCatalog.CountLabel(total) : "";
+                    return true;
+                }
+                if (bindingName == "tooltip")
+                {
+                    value = ItemNameText + "\n" + total.ToString("N0", CultureInfo.InvariantCulture)
+                        + " available in connected storage\nClick / Shift-click: up to one normal stack; right-click: half that stack";
+                    return true;
+                }
+            }
+            return base.GetBindingValueInternal(ref value, bindingName);
+        }
+
         public override bool CanSwap(ItemStack stack)
         {
             StorageNetworkSession session = StorageTerminalManager.ActiveSession;

@@ -13,5 +13,12 @@
     <Compile Include="../src/LoadoutSwapPlanner.cs" Link="LoadoutSwapPlanner.cs" />
     <Compile Include="../src/TerminalRules.cs" Link="TerminalRules.cs" />
     <Compile Include="../src/NearbyCraftConfig.cs" Link="NearbyCraftConfig.cs" />
+    <Compile Include="../src/WorkshopRules.cs" Link="WorkshopRules.cs" />
+    <Compile Include="../src/WorkshopPlanner.cs" Link="WorkshopPlanner.cs" />
+    <Compile Include="WorkshopTests.cs" />
+    <Compile Include="../src/TerminalCatalog.cs" Link="TerminalCatalog.cs" />
+    <Compile Include="TerminalCatalogTests.cs" />
+    <Compile Include="StorageOutputTests.cs" />
+    <Compile Include="../src/StorageOutputPlanner.cs" Link="StorageOutputPlanner.cs" />
   </ItemGroup>
 </Project>

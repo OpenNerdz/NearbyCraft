@@ -1,5 +1,8 @@
 <configs>
   <append xpath="/xui">
+    <window_group name="nearbycraft_workshop" controller="NearbyCraft.XUiC_WorkshopWindowGroup, NearbyCraft" close_compass_on_open="true" defaultselected="workshopSearch">
+      <window name="nearbyCraftWorkshop" />
+    </window_group>
     <window_group name="nearbycraft_loadout_locker" controller="NearbyCraft.XUiC_LoadoutLockerWindowGroup, NearbyCraft" close_compass_on_open="true" defaultselected="nearbyCraftLoadoutSave1">
       <window name="nearbyCraftLoadoutLocker" />
     </window_group>

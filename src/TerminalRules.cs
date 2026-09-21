@@ -9,6 +9,11 @@ namespace NearbyCraft
         // NGUI touch IDs, not Unity Input.GetMouseButton indices.
         internal static bool IsRightClick(int mouseButton) { return mouseButton == -2; }
 
+        internal static bool CanShiftToInventory(bool canUseBackpack, bool canUseToolbelt)
+        {
+            return canUseBackpack || canUseToolbelt;
+        }
+
         internal static bool CanBulkDepositSlot(bool matchingOnly, bool backpackSlotLocked)
         {
             return !matchingOnly || !backpackSlotLocked;

@@ -4,19 +4,21 @@
     <LangVersion>7.3</LangVersion>
     <AssemblyName>NearbyCraft</AssemblyName>
     <RootNamespace>NearbyCraft</RootNamespace>
-    <Version>1.4.0</Version>
-    <AssemblyVersion>1.4.0.0</AssemblyVersion>
-    <FileVersion>1.4.0.0</FileVersion>
+    <Version>1.8.0</Version>
+    <AssemblyVersion>1.8.0.0</AssemblyVersion>
+    <FileVersion>1.8.0.0</FileVersion>
     <Deterministic>true</Deterministic>
     <GenerateDocumentationFile>false</GenerateDocumentationFile>
     <DebugType>none</DebugType>
-    <GamePath Condition="'$(GamePath)' == ''">/home/bradhosk/.local/share/Steam/steamapps/common/7 Days To Die</GamePath>
+    <DefineConstants Condition="'$(GameplayQA)' == 'true'">$(DefineConstants);NEARBYCRAFT_GAMEPLAY_QA</DefineConstants>
+    <GamePath Condition="'$(GamePath)' == ''">/home/brad/.local/share/Steam/steamapps/common/7 Days To Die</GamePath>
     <ManagedPath>$(GamePath)/7DaysToDie_Data/Managed</ManagedPath>
     <HarmonyPath>$(GamePath)/Mods/0_TFP_Harmony</HarmonyPath>
   </PropertyGroup>
 
   <ItemGroup>
     <Compile Remove="tests/**/*.cs" />
+    <Compile Include="tests/GameplayQA.cs" Condition="'$(GameplayQA)' == 'true'" />
     <PackageReference Include="Microsoft.NETFramework.ReferenceAssemblies" Version="1.0.3" PrivateAssets="all" />
     <PackageFile Include="package/**/*" />
   </ItemGroup>
@@ -32,6 +34,10 @@
     </Reference>
     <Reference Include="UnityEngine.InputLegacyModule">
       <HintPath>$(ManagedPath)/UnityEngine.InputLegacyModule.dll</HintPath>
+      <Private>false</Private>
+    </Reference>
+    <Reference Include="UnityEngine.ScreenCaptureModule" Condition="'$(GameplayQA)' == 'true'">
+      <HintPath>$(ManagedPath)/UnityEngine.ScreenCaptureModule.dll</HintPath>
       <Private>false</Private>
     </Reference>
     <Reference Include="LogLibrary">
@@ -57,7 +63,7 @@
     <Error Condition="!Exists('$(HarmonyPath)/0Harmony.dll')" Text="The game's 0_TFP_Harmony mod is missing at '$(HarmonyPath)'. Verify the game installation." />
   </Target>
 
-  <Target Name="PackageRelease" AfterTargets="Build" Condition="'$(Configuration)' == 'Release'">
+  <Target Name="PackageRelease" AfterTargets="Build" Condition="'$(Configuration)' == 'Release' and '$(GameplayQA)' != 'true'">
     <PropertyGroup>
       <StageRoot>$(MSBuildProjectDirectory)/dist/stage</StageRoot>
       <StageMod>$(StageRoot)/NearbyCraft</StageMod>

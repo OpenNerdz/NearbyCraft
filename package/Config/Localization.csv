@@ -1,14 +1,16 @@
 Key,File,Type,UsedInMainMenu,NoTranslate,KeepLoaded,english
+nearbyCraftWorkshopController,blocks,Block,,x,,Workshop Automation Controller
+nearbyCraftWorkshopControllerDesc,blocks,Block,,x,,Production access panel for a nearby Storage Console. Queue one-time orders or maintain stock across up to 24 machines. Automatically supplies ingredients and wood and smelting materials. Collects finished goods. Includes mixers and forges and vanilla collectors. Starts paused. Solo worlds only.
 nearbyCraftLoadoutLocker,blocks,Block,,x,,Storage Network Loadout Locker
 nearbyCraftLoadoutLockerDesc,blocks,Block,,x,,Saves four equipment toolbelt and locked-backpack supply profiles. Holds no items: complete loadout swaps use the nearest accessible Storage Console and obey its chest cap range access and slot locks. Requires a console within 15 blocks by default.
 nearbyCraftStorageTerminal,blocks,Block,,x,,Storage Console - Tier 1 (8 Chests)
-nearbyCraftStorageTerminalDesc,blocks,Block,,x,,Connects the nearest 8 accessible player chests within 15 blocks by default. Upgrade in place with a Tier 2 kit and a repair tool. Close the console before upgrading. Other chests remain usable directly.
+nearbyCraftStorageTerminalDesc,blocks,Block,,x,,Storage and production manager for the nearest 8 accessible player chests. Press E then PRODUCTION to queue recipes and manage machines within 15 blocks by default. Supplies real inputs and fuel and collects output. Upgrade with a Tier 2 kit. Close before upgrading. Solo worlds only.
 nearbyCraftStorageTerminalTier2,blocks,Block,,x,,Storage Console - Tier 2 (16 Chests)
-nearbyCraftStorageTerminalTier2Desc,blocks,Block,,x,,Connects up to 16 chests. Same range as Tier 1. Upgrade in place with a Tier 3 kit and a repair tool.
+nearbyCraftStorageTerminalTier2Desc,blocks,Block,,x,,Unified storage and production manager for up to 16 chests. Open PRODUCTION for orders and machines. Same range as Tier 1. Upgrade with a Tier 3 kit.
 nearbyCraftStorageTerminalTier3,blocks,Block,,x,,Storage Console - Tier 3 (32 Chests)
-nearbyCraftStorageTerminalTier3Desc,blocks,Block,,x,,Connects up to 32 chests. Same range as Tier 1. Upgrade in place with a Tier 4 kit and a repair tool.
+nearbyCraftStorageTerminalTier3Desc,blocks,Block,,x,,Unified storage and production manager for up to 32 chests. Open PRODUCTION for orders and machines. Same range as Tier 1. Upgrade with a Tier 4 kit.
 nearbyCraftStorageTerminalTier4,blocks,Block,,x,,Storage Console - Tier 4 (64 Chests)
-nearbyCraftStorageTerminalTier4Desc,blocks,Block,,x,,Connects up to 64 chests. Same range as Tier 1. Maximum tier.
+nearbyCraftStorageTerminalTier4Desc,blocks,Block,,x,,Unified storage and production manager for up to 64 chests. Open PRODUCTION for orders and machines. Same range as Tier 1. Maximum tier.
 nearbyCraftTerminalUpgrade2,items,Item,,x,,Storage Console Upgrade Kit - Tier 2
 nearbyCraftTerminalUpgrade2Desc,items,Item,,x,,Carry one kit and use the repair action of a stone axe or hammer or nailgun on a fully repaired Tier 1 console. Doubles its capacity to 16 chests. Consumed on upgrade.
 nearbyCraftTerminalUpgrade3,items,Item,,x,,Storage Console Upgrade Kit - Tier 3

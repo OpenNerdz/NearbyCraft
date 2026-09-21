@@ -6,6 +6,9 @@ void Check(bool result, string message)
     assertions++;
     if (!result) throw new Exception(message);
 }
+WorkshopTests.Run(Check);
+TerminalCatalogTests.Run(Check);
+StorageOutputTests.Run(Check);
 ItemStack Stack(int type, int count, int metadata = 0) => new ItemStack(new ItemValue { type = type, Metadata = metadata }, count);
 StorageTransferPlan Plan(ItemStack[] slots, params bool[] locked)
 {
@@ -21,6 +24,13 @@ Check(slots[0].count == 95 && slots[1].IsEmpty(), "Planning does not mutate live
 Check(plan.TryCommit(_ => true), "Deposit commits");
 Check(slots[0].count == 100 && slots[1].count == 100, "Matching stack is filled first");
 Check(!plan.TryCommit(_ => true), "Cannot commit twice");
+
+slots = new[] { Stack(1, 10) };
+plan = Plan(slots);
+Check(plan.Withdraw(Stack(1, 1), 4) == 4 && plan.CanCommit(_ => true),
+    "A transaction can be prevalidated before native inventory staging");
+Check(slots[0].count == 10, "Prevalidation never commits planned changes");
+Check(plan.TryCommit(_ => true) && slots[0].count == 6, "A prevalidated transaction still commits once");
 
 slots = new[] { Stack(1, 90), ItemStack.Empty };
 plan = Plan(slots, true, true);
@@ -101,6 +111,9 @@ carriedSupply.itemValue.Flags = 2;
 Check(!StorageTransferPlan.Matches(storedSupply, carriedSupply), "Item flags remain distinct");
 Check(TerminalRules.IsRightClick(-2) && !TerminalRules.IsRightClick(-1)
     && !TerminalRules.IsRightClick(1), "Right-click uses NGUI -2, not Unity button 1");
+Check(TerminalRules.CanShiftToInventory(true, false), "Shift-click accepts backpack-only items");
+Check(TerminalRules.CanShiftToInventory(false, true), "Shift-click accepts toolbelt-only items");
+Check(!TerminalRules.CanShiftToInventory(false, false), "Shift-click rejects items that fit neither inventory");
 Check(TerminalRules.CanBulkDepositSlot(false, true), "Deposit All includes locked backpack slots");
 Check(TerminalRules.CanBulkDepositSlot(false, false), "Deposit All includes unlocked backpack slots");
 Check(!TerminalRules.CanBulkDepositSlot(true, true), "Matching Only preserves locked backpack slots");
@@ -207,4 +220,4 @@ for (int test = 0; test < 3000; test++)
         if (locks[i]) Check(slots[i].count == before[i].count && slots[i].itemValue.Equals(before[i].itemValue), "Randomized lock preservation");
     }
 }
-Console.WriteLine($"PASS: {assertions} assertions, including 3000 randomized production-planner scenarios.");
+Console.WriteLine($"PASS: {assertions} assertions, including 3000 existing + 2000 workshop + 1000 grouped-display + 10000 ore-export randomized scenarios.");

@@ -7,6 +7,161 @@
   </append>
 
   <append xpath="/windows">
+    <window name="nearbyCraftWorkshop" width="1040" height="740" panel="Left" cursor_area="true">
+      <!-- Two native game-style panes: a crafting-list request flow and a workstation status pane. -->
+      <rect name="productionHeader" pos="0,0" width="366" height="43" depth="1">
+        <headerbg />
+        <sprite depth="3" name="productionIcon" style="icon32px" pivot="center" pos="21,-21" sprite="ui_game_symbol_computer" />
+        <label depth="3" pos="42,-6" width="310" height="32" text="NEARBYCRAFT / PRODUCTION" font_size="22" />
+      </rect>
+      <rect name="workshopHeader" pos="374,0" width="666" height="43" depth="1">
+        <headerbg />
+        <sprite depth="3" name="workshopIcon" style="icon32px" pivot="center" pos="21,-21" sprite="ui_game_symbol_hammer" />
+        <label depth="3" pos="42,-6" width="180" height="32" text="WORKSHOP" font_size="22" />
+        <label depth="3" pos="222,-10" width="252" height="26" font_size="16" text="{workshop_state}" justify="right" color="{workshop_state_color}" />
+        <button name="workshopRun" pos="482,-5" width="96" height="33" depth="5" sprite="menu_empty" style="press, hover" defaultcolor="80,80,80,255" hovercolor="110,110,110,255" hoverscale="1" sound="[paging_click]"><label depth="6" pos="48,-16" width="90" height="31" font_size="16" text="{workshop_run}" pivot="center" justify="center" /></button>
+        <button name="workshopStorage" pos="584,-5" width="76" height="33" depth="5" sprite="menu_empty" style="press, hover" defaultcolor="80,80,80,255" hovercolor="110,110,110,255" hoverscale="1" sound="[paging_click]" tooltip="Back to storage"><label depth="6" pos="38,-16" width="70" height="31" font_size="16" text="BACK" pivot="center" justify="center" /></button>
+      </rect>
+
+      <sprite depth="1" pos="0,-46" width="366" height="694" color="[darkGrey]" type="sliced" />
+      <sprite depth="2" pos="0,-46" width="366" height="694" color="[black]" sprite="menu_empty3px" type="sliced" fillcenter="false" />
+      <sprite depth="1" pos="374,-46" width="666" height="694" color="[darkGrey]" type="sliced" />
+      <sprite depth="2" pos="374,-46" width="666" height="694" color="[black]" sprite="menu_empty3px" type="sliced" fillcenter="false" />
+
+      <rect name="productionSearch">
+        <label depth="4" pos="16,-53" width="334" height="24" font_size="18" text="1  FIND AN ITEM" />
+        <sprite depth="4" name="workshopSearchIcon" style="icon30px" pos="31,-96" sprite="ui_game_symbol_search" pivot="center" />
+        <textfield name="workshopSearch" pos="50,-78" width="300" height="36" depth="5" search_field="true" clear_button="true" character_limit="64" />
+        <button name="workshopResult0" pos="16,-122" width="334" height="41" depth="5" sprite="menu_empty" style="press, hover" defaultcolor="{workshop_result_color0}" hovercolor="[lightGrey]" hoverscale="1" sound="[paging_click]" visible="{workshop_result_visible0}"><sprite depth="6" atlas="ItemIconAtlas" sprite="{workshop_result_icon0}" pos="7,-4" width="32" height="32" /><label depth="6" pos="48,-3" width="278" height="23" font_size="18" text="{workshop_result_name0}" max_line_count="1" overflow="shrinkcontent" /><label depth="6" pos="48,-25" width="278" height="16" font_size="16" text="{workshop_result_hint0}" color="[lightGrey]" /></button>
+        <button name="workshopResult1" pos="16,-166" width="334" height="41" depth="5" sprite="menu_empty" style="press, hover" defaultcolor="{workshop_result_color1}" hovercolor="[lightGrey]" hoverscale="1" sound="[paging_click]" visible="{workshop_result_visible1}"><sprite depth="6" atlas="ItemIconAtlas" sprite="{workshop_result_icon1}" pos="7,-4" width="32" height="32" /><label depth="6" pos="48,-3" width="278" height="23" font_size="18" text="{workshop_result_name1}" max_line_count="1" overflow="shrinkcontent" /><label depth="6" pos="48,-25" width="278" height="16" font_size="16" text="{workshop_result_hint1}" color="[lightGrey]" /></button>
+        <button name="workshopResult2" pos="16,-210" width="334" height="41" depth="5" sprite="menu_empty" style="press, hover" defaultcolor="{workshop_result_color2}" hovercolor="[lightGrey]" hoverscale="1" sound="[paging_click]" visible="{workshop_result_visible2}"><sprite depth="6" atlas="ItemIconAtlas" sprite="{workshop_result_icon2}" pos="7,-4" width="32" height="32" /><label depth="6" pos="48,-3" width="278" height="23" font_size="18" text="{workshop_result_name2}" max_line_count="1" overflow="shrinkcontent" /><label depth="6" pos="48,-25" width="278" height="16" font_size="16" text="{workshop_result_hint2}" color="[lightGrey]" /></button>
+        <button name="workshopResult3" pos="16,-254" width="334" height="41" depth="5" sprite="menu_empty" style="press, hover" defaultcolor="{workshop_result_color3}" hovercolor="[lightGrey]" hoverscale="1" sound="[paging_click]" visible="{workshop_result_visible3}"><sprite depth="6" atlas="ItemIconAtlas" sprite="{workshop_result_icon3}" pos="7,-4" width="32" height="32" /><label depth="6" pos="48,-3" width="278" height="23" font_size="18" text="{workshop_result_name3}" max_line_count="1" overflow="shrinkcontent" /><label depth="6" pos="48,-25" width="278" height="16" font_size="16" text="{workshop_result_hint3}" color="[lightGrey]" /></button>
+        <button name="workshopResult4" pos="16,-298" width="334" height="41" depth="5" sprite="menu_empty" style="press, hover" defaultcolor="{workshop_result_color4}" hovercolor="[lightGrey]" hoverscale="1" sound="[paging_click]" visible="{workshop_result_visible4}"><sprite depth="6" atlas="ItemIconAtlas" sprite="{workshop_result_icon4}" pos="7,-4" width="32" height="32" /><label depth="6" pos="48,-3" width="278" height="23" font_size="18" text="{workshop_result_name4}" max_line_count="1" overflow="shrinkcontent" /><label depth="6" pos="48,-25" width="278" height="16" font_size="16" text="{workshop_result_hint4}" color="[lightGrey]" /></button>
+        <button name="workshopResult5" pos="16,-342" width="334" height="41" depth="5" sprite="menu_empty" style="press, hover" defaultcolor="{workshop_result_color5}" hovercolor="[lightGrey]" hoverscale="1" sound="[paging_click]" visible="{workshop_result_visible5}"><sprite depth="6" atlas="ItemIconAtlas" sprite="{workshop_result_icon5}" pos="7,-4" width="32" height="32" /><label depth="6" pos="48,-3" width="278" height="23" font_size="18" text="{workshop_result_name5}" max_line_count="1" overflow="shrinkcontent" /><label depth="6" pos="48,-25" width="278" height="16" font_size="16" text="{workshop_result_hint5}" color="[lightGrey]" /></button>
+        <button name="workshopPrevious" pos="16,-390" width="32" height="28" depth="5" sprite="menu_empty" style="press, hover" enabled="{workshop_previous_ready}" disabledcolor="[darkGrey]" defaultcolor="80,80,80,255" hovercolor="110,110,110,255" hoverscale="1" sound="[paging_click]"><label depth="6" pos="16,-14" width="24" height="26" font_size="18" text="&lt;" pivot="center" justify="center" /></button>
+        <label depth="4" pos="54,-394" width="258" height="23" font_size="16" text="{workshop_results}" justify="center" color="[lightGrey]" />
+        <button name="workshopNext" pos="318,-390" width="32" height="28" depth="5" sprite="menu_empty" style="press, hover" enabled="{workshop_next_ready}" disabledcolor="[darkGrey]" defaultcolor="80,80,80,255" hovercolor="110,110,110,255" hoverscale="1" sound="[paging_click]"><label depth="6" pos="16,-14" width="24" height="26" font_size="18" text="&gt;" pivot="center" justify="center" /></button>
+        <sprite depth="3" sprite="menu_empty3px" type="sliced" fillcenter="false" pos="16,-427" width="334" height="255" color="[black]" />
+        <label depth="4" pos="24,-434" width="318" height="22" font_size="18" text="2  SET REQUEST" />
+        <sprite depth="4" atlas="ItemIconAtlas" sprite="{workshop_selected_icon}" pos="24,-462" width="38" height="38" />
+        <label depth="4" pos="72,-460" width="270" height="26" font_size="22" text="{workshop_selected}" max_line_count="1" overflow="shrinkcontent" tooltip="{workshop_recipe}" />
+        <label depth="4" pos="72,-489" width="270" height="19" font_size="16" text="{workshop_selected_stock}" color="[lightGrey]" />
+        <button name="workshopOnce" pos="24,-518" width="155" height="32" depth="5" sprite="menu_empty" style="press, hover" defaultcolor="{workshop_once_color}" hovercolor="110,110,110,255" hoverscale="1" sound="[paging_click]" tooltip="Make a new quantity once"><label depth="6" pos="77,-16" width="149" height="30" font_size="18" text="CRAFT ONCE" pivot="center" justify="center" /></button>
+        <button name="workshopStock" pos="187,-518" width="155" height="32" depth="5" sprite="menu_empty" style="press, hover" defaultcolor="{workshop_stock_color}" hovercolor="110,110,110,255" hoverscale="1" sound="[paging_click]" tooltip="Keep this amount in storage automatically"><label depth="6" pos="77,-16" width="149" height="30" font_size="18" text="KEEP STOCKED" pivot="center" justify="center" /></button>
+        <label depth="4" pos="24,-561" width="42" height="24" font_size="16" text="QTY" />
+        <textfield name="workshopAmount" pos="67,-554" width="67" height="35" depth="5" character_limit="6" />
+        <button name="workshopQty1" pos="141,-554" width="43" height="35" depth="5" sprite="menu_empty" style="press, hover" defaultcolor="80,80,80,255" hovercolor="110,110,110,255" hoverscale="1" sound="[paging_click]"><label depth="6" pos="21,-17" width="37" height="33" font_size="18" text="1" pivot="center" justify="center" /></button>
+        <button name="workshopQty10" pos="191,-554" width="43" height="35" depth="5" sprite="menu_empty" style="press, hover" defaultcolor="80,80,80,255" hovercolor="110,110,110,255" hoverscale="1" sound="[paging_click]"><label depth="6" pos="21,-17" width="37" height="33" font_size="18" text="10" pivot="center" justify="center" /></button>
+        <button name="workshopQty100" pos="241,-554" width="43" height="35" depth="5" sprite="menu_empty" style="press, hover" defaultcolor="80,80,80,255" hovercolor="110,110,110,255" hoverscale="1" sound="[paging_click]"><label depth="6" pos="21,-17" width="37" height="33" font_size="18" text="100" pivot="center" justify="center" /></button>
+        <button name="workshopQty1000" pos="291,-554" width="51" height="35" depth="5" sprite="menu_empty" style="press, hover" defaultcolor="80,80,80,255" hovercolor="110,110,110,255" hoverscale="1" sound="[paging_click]"><label depth="6" pos="25,-17" width="45" height="33" font_size="18" text="1000" pivot="center" justify="center" /></button>
+        <button name="workshopAdd" pos="24,-599" width="318" height="40" depth="5" sprite="menu_empty" style="press, hover" enabled="{workshop_add_ready}" disabledcolor="[darkGrey]" defaultcolor="45,85,45,255" hovercolor="65,115,65,255" hoverscale="1" sound="[paging_click]" tooltip="Request this item and start automation. Whole recipe yields may round up."><label depth="6" pos="159,-20" width="312" height="38" font_size="20" text="{workshop_add}" pivot="center" justify="center" /></button>
+        <label depth="4" pos="24,-646" width="318" height="34" font_size="16" text="{workshop_mode_hint}" max_line_count="2" overflow="shrinkcontent" color="[lightGrey]" />
+      </rect>
+
+      <sprite depth="2" pos="378,-50" width="658" height="36" color="[black]" sprite="menu_empty3px" type="sliced" fillcenter="false" />
+      <label depth="4" pos="388,-57" width="638" height="24" font_size="18" text="{workshop_overview}" color="[lightGrey]" />
+      <button name="workshopOrders" pos="386,-94" width="132" height="34" depth="5" sprite="menu_empty" style="press, hover" defaultcolor="{workshop_orders_color}" hovercolor="110,110,110,255" hoverscale="1" sound="[paging_click]"><label depth="6" pos="66,-17" width="126" height="32" font_size="18" text="JOBS" pivot="center" justify="center" /></button>
+      <button name="workshopMachines" pos="524,-94" width="142" height="34" depth="5" sprite="menu_empty" style="press, hover" defaultcolor="{workshop_machines_color}" hovercolor="110,110,110,255" hoverscale="1" sound="[paging_click]"><label depth="6" pos="71,-17" width="136" height="32" font_size="18" text="MACHINES" pivot="center" justify="center" /></button>
+      <button name="workshopHistory" pos="672,-94" width="170" height="34" depth="5" sprite="menu_empty" style="press, hover" defaultcolor="{workshop_history_color}" hovercolor="110,110,110,255" hoverscale="1" sound="[paging_click]" tooltip="Completed one-time requests; Repeat fills the request form"><label depth="6" pos="85,-17" width="164" height="32" font_size="16" text="{workshop_history_title}" pivot="center" justify="center" /></button>
+      <button name="workshopSettings" pos="848,-94" width="176" height="34" depth="5" sprite="menu_empty" style="press, hover" defaultcolor="{workshop_settings_color}" hovercolor="110,110,110,255" hoverscale="1" sound="[paging_click]"><label depth="6" pos="88,-17" width="170" height="32" font_size="18" text="OPTIONS" pivot="center" justify="center" /></button>
+      <rect name="workshopRows" visible="{workshop_list_visible}">
+        <rect name="workshopRow0" pos="386,-138" width="638" height="70" visible="{workshop_row_visible0}">
+          <sprite depth="2" sprite="menu_empty" type="sliced" fillcenter="true" pos="0,0" width="638" height="70" color="[darkGrey]" />
+          <sprite depth="3" sprite="menu_empty3px" type="sliced" fillcenter="false" pos="0,0" width="638" height="70" color="[black]" />
+          <sprite depth="2" sprite="menu_empty" type="sliced" fillcenter="true" pos="0,-0" width="3" height="70" color="{workshop_phase_color0}"  />
+          <sprite depth="4" atlas="ItemIconAtlas" sprite="{workshop_icon0}" pos="13,-13" width="36" height="36" />
+          <label depth="4" pos="61,-5" width="364" height="25" font_size="22" text="{workshop_name0}" max_line_count="1" overflow="shrinkcontent" />
+          <label depth="4" pos="423,-7" width="200" height="22" font_size="16" text="{workshop_phase0}" justify="right" color="{workshop_phase_color0}" />
+          <label depth="4" pos="61,-31" width="397" height="19" font_size="16" text="{workshop_goal0}" color="[lightGrey]" />
+          <label depth="4" pos="61,-51" width="400" height="17" font_size="16" text="{workshop_detail0}" max_line_count="1" overflow="shrinkcontent" tooltip="{workshop_detail0}" color="[lightGrey]" />
+          <button name="workshopToggle0" pos="472,-39" width="73" height="25" depth="5" sprite="menu_empty" style="press, hover" defaultcolor="80,80,80,255" hovercolor="110,110,110,255" hoverscale="1" sound="[paging_click]"><label depth="6" pos="36,-12" width="65" height="23" font_size="18" text="{workshop_toggle0}" pivot="center" justify="center" /></button>
+          <button name="workshopRemove0" pos="553,-39" width="74" height="25" depth="5" sprite="menu_empty" style="press, hover" defaultcolor="80,80,80,255" hovercolor="110,110,110,255" hoverscale="1" sound="[paging_click]" visible="{workshop_orders_visible}" tooltip="Remove this request. Already queued work and materials remain in machines."><label depth="6" pos="37,-12" width="66" height="23" font_size="18" text="Remove" pivot="center" justify="center" /></button>
+        </rect>
+        <rect name="workshopRow1" pos="386,-214" width="638" height="70" visible="{workshop_row_visible1}">
+          <sprite depth="2" sprite="menu_empty" type="sliced" fillcenter="true" pos="0,0" width="638" height="70" color="[darkGrey]" />
+          <sprite depth="3" sprite="menu_empty3px" type="sliced" fillcenter="false" pos="0,0" width="638" height="70" color="[black]" />
+          <sprite depth="2" sprite="menu_empty" type="sliced" fillcenter="true" pos="0,-0" width="3" height="70" color="{workshop_phase_color1}"  />
+          <sprite depth="4" atlas="ItemIconAtlas" sprite="{workshop_icon1}" pos="13,-13" width="36" height="36" />
+          <label depth="4" pos="61,-5" width="364" height="25" font_size="22" text="{workshop_name1}" max_line_count="1" overflow="shrinkcontent" />
+          <label depth="4" pos="423,-7" width="200" height="22" font_size="16" text="{workshop_phase1}" justify="right" color="{workshop_phase_color1}" />
+          <label depth="4" pos="61,-31" width="397" height="19" font_size="16" text="{workshop_goal1}" color="[lightGrey]" />
+          <label depth="4" pos="61,-51" width="400" height="17" font_size="16" text="{workshop_detail1}" max_line_count="1" overflow="shrinkcontent" tooltip="{workshop_detail1}" color="[lightGrey]" />
+          <button name="workshopToggle1" pos="472,-39" width="73" height="25" depth="5" sprite="menu_empty" style="press, hover" defaultcolor="80,80,80,255" hovercolor="110,110,110,255" hoverscale="1" sound="[paging_click]"><label depth="6" pos="36,-12" width="65" height="23" font_size="18" text="{workshop_toggle1}" pivot="center" justify="center" /></button>
+          <button name="workshopRemove1" pos="553,-39" width="74" height="25" depth="5" sprite="menu_empty" style="press, hover" defaultcolor="80,80,80,255" hovercolor="110,110,110,255" hoverscale="1" sound="[paging_click]" visible="{workshop_orders_visible}" tooltip="Remove this request. Already queued work and materials remain in machines."><label depth="6" pos="37,-12" width="66" height="23" font_size="18" text="Remove" pivot="center" justify="center" /></button>
+        </rect>
+        <rect name="workshopRow2" pos="386,-290" width="638" height="70" visible="{workshop_row_visible2}">
+          <sprite depth="2" sprite="menu_empty" type="sliced" fillcenter="true" pos="0,0" width="638" height="70" color="[darkGrey]" />
+          <sprite depth="3" sprite="menu_empty3px" type="sliced" fillcenter="false" pos="0,0" width="638" height="70" color="[black]" />
+          <sprite depth="2" sprite="menu_empty" type="sliced" fillcenter="true" pos="0,-0" width="3" height="70" color="{workshop_phase_color2}"  />
+          <sprite depth="4" atlas="ItemIconAtlas" sprite="{workshop_icon2}" pos="13,-13" width="36" height="36" />
+          <label depth="4" pos="61,-5" width="364" height="25" font_size="22" text="{workshop_name2}" max_line_count="1" overflow="shrinkcontent" />
+          <label depth="4" pos="423,-7" width="200" height="22" font_size="16" text="{workshop_phase2}" justify="right" color="{workshop_phase_color2}" />
+          <label depth="4" pos="61,-31" width="397" height="19" font_size="16" text="{workshop_goal2}" color="[lightGrey]" />
+          <label depth="4" pos="61,-51" width="400" height="17" font_size="16" text="{workshop_detail2}" max_line_count="1" overflow="shrinkcontent" tooltip="{workshop_detail2}" color="[lightGrey]" />
+          <button name="workshopToggle2" pos="472,-39" width="73" height="25" depth="5" sprite="menu_empty" style="press, hover" defaultcolor="80,80,80,255" hovercolor="110,110,110,255" hoverscale="1" sound="[paging_click]"><label depth="6" pos="36,-12" width="65" height="23" font_size="18" text="{workshop_toggle2}" pivot="center" justify="center" /></button>
+          <button name="workshopRemove2" pos="553,-39" width="74" height="25" depth="5" sprite="menu_empty" style="press, hover" defaultcolor="80,80,80,255" hovercolor="110,110,110,255" hoverscale="1" sound="[paging_click]" visible="{workshop_orders_visible}" tooltip="Remove this request. Already queued work and materials remain in machines."><label depth="6" pos="37,-12" width="66" height="23" font_size="18" text="Remove" pivot="center" justify="center" /></button>
+        </rect>
+        <rect name="workshopRow3" pos="386,-366" width="638" height="70" visible="{workshop_row_visible3}">
+          <sprite depth="2" sprite="menu_empty" type="sliced" fillcenter="true" pos="0,0" width="638" height="70" color="[darkGrey]" />
+          <sprite depth="3" sprite="menu_empty3px" type="sliced" fillcenter="false" pos="0,0" width="638" height="70" color="[black]" />
+          <sprite depth="2" sprite="menu_empty" type="sliced" fillcenter="true" pos="0,-0" width="3" height="70" color="{workshop_phase_color3}"  />
+          <sprite depth="4" atlas="ItemIconAtlas" sprite="{workshop_icon3}" pos="13,-13" width="36" height="36" />
+          <label depth="4" pos="61,-5" width="364" height="25" font_size="22" text="{workshop_name3}" max_line_count="1" overflow="shrinkcontent" />
+          <label depth="4" pos="423,-7" width="200" height="22" font_size="16" text="{workshop_phase3}" justify="right" color="{workshop_phase_color3}" />
+          <label depth="4" pos="61,-31" width="397" height="19" font_size="16" text="{workshop_goal3}" color="[lightGrey]" />
+          <label depth="4" pos="61,-51" width="400" height="17" font_size="16" text="{workshop_detail3}" max_line_count="1" overflow="shrinkcontent" tooltip="{workshop_detail3}" color="[lightGrey]" />
+          <button name="workshopToggle3" pos="472,-39" width="73" height="25" depth="5" sprite="menu_empty" style="press, hover" defaultcolor="80,80,80,255" hovercolor="110,110,110,255" hoverscale="1" sound="[paging_click]"><label depth="6" pos="36,-12" width="65" height="23" font_size="18" text="{workshop_toggle3}" pivot="center" justify="center" /></button>
+          <button name="workshopRemove3" pos="553,-39" width="74" height="25" depth="5" sprite="menu_empty" style="press, hover" defaultcolor="80,80,80,255" hovercolor="110,110,110,255" hoverscale="1" sound="[paging_click]" visible="{workshop_orders_visible}" tooltip="Remove this request. Already queued work and materials remain in machines."><label depth="6" pos="37,-12" width="66" height="23" font_size="18" text="Remove" pivot="center" justify="center" /></button>
+        </rect>
+        <rect name="workshopRow4" pos="386,-442" width="638" height="70" visible="{workshop_row_visible4}">
+          <sprite depth="2" sprite="menu_empty" type="sliced" fillcenter="true" pos="0,0" width="638" height="70" color="[darkGrey]" />
+          <sprite depth="3" sprite="menu_empty3px" type="sliced" fillcenter="false" pos="0,0" width="638" height="70" color="[black]" />
+          <sprite depth="2" sprite="menu_empty" type="sliced" fillcenter="true" pos="0,-0" width="3" height="70" color="{workshop_phase_color4}"  />
+          <sprite depth="4" atlas="ItemIconAtlas" sprite="{workshop_icon4}" pos="13,-13" width="36" height="36" />
+          <label depth="4" pos="61,-5" width="364" height="25" font_size="22" text="{workshop_name4}" max_line_count="1" overflow="shrinkcontent" />
+          <label depth="4" pos="423,-7" width="200" height="22" font_size="16" text="{workshop_phase4}" justify="right" color="{workshop_phase_color4}" />
+          <label depth="4" pos="61,-31" width="397" height="19" font_size="16" text="{workshop_goal4}" color="[lightGrey]" />
+          <label depth="4" pos="61,-51" width="400" height="17" font_size="16" text="{workshop_detail4}" max_line_count="1" overflow="shrinkcontent" tooltip="{workshop_detail4}" color="[lightGrey]" />
+          <button name="workshopToggle4" pos="472,-39" width="73" height="25" depth="5" sprite="menu_empty" style="press, hover" defaultcolor="80,80,80,255" hovercolor="110,110,110,255" hoverscale="1" sound="[paging_click]"><label depth="6" pos="36,-12" width="65" height="23" font_size="18" text="{workshop_toggle4}" pivot="center" justify="center" /></button>
+          <button name="workshopRemove4" pos="553,-39" width="74" height="25" depth="5" sprite="menu_empty" style="press, hover" defaultcolor="80,80,80,255" hovercolor="110,110,110,255" hoverscale="1" sound="[paging_click]" visible="{workshop_orders_visible}" tooltip="Remove this request. Already queued work and materials remain in machines."><label depth="6" pos="37,-12" width="66" height="23" font_size="18" text="Remove" pivot="center" justify="center" /></button>
+        </rect>
+        <rect name="workshopRow5" pos="386,-518" width="638" height="70" visible="{workshop_row_visible5}">
+          <sprite depth="2" sprite="menu_empty" type="sliced" fillcenter="true" pos="0,0" width="638" height="70" color="[darkGrey]" />
+          <sprite depth="3" sprite="menu_empty3px" type="sliced" fillcenter="false" pos="0,0" width="638" height="70" color="[black]" />
+          <sprite depth="2" sprite="menu_empty" type="sliced" fillcenter="true" pos="0,-0" width="3" height="70" color="{workshop_phase_color5}"  />
+          <sprite depth="4" atlas="ItemIconAtlas" sprite="{workshop_icon5}" pos="13,-13" width="36" height="36" />
+          <label depth="4" pos="61,-5" width="364" height="25" font_size="22" text="{workshop_name5}" max_line_count="1" overflow="shrinkcontent" />
+          <label depth="4" pos="423,-7" width="200" height="22" font_size="16" text="{workshop_phase5}" justify="right" color="{workshop_phase_color5}" />
+          <label depth="4" pos="61,-31" width="397" height="19" font_size="16" text="{workshop_goal5}" color="[lightGrey]" />
+          <label depth="4" pos="61,-51" width="400" height="17" font_size="16" text="{workshop_detail5}" max_line_count="1" overflow="shrinkcontent" tooltip="{workshop_detail5}" color="[lightGrey]" />
+          <button name="workshopToggle5" pos="472,-39" width="73" height="25" depth="5" sprite="menu_empty" style="press, hover" defaultcolor="80,80,80,255" hovercolor="110,110,110,255" hoverscale="1" sound="[paging_click]"><label depth="6" pos="36,-12" width="65" height="23" font_size="18" text="{workshop_toggle5}" pivot="center" justify="center" /></button>
+          <button name="workshopRemove5" pos="553,-39" width="74" height="25" depth="5" sprite="menu_empty" style="press, hover" defaultcolor="80,80,80,255" hovercolor="110,110,110,255" hoverscale="1" sound="[paging_click]" visible="{workshop_orders_visible}" tooltip="Remove this request. Already queued work and materials remain in machines."><label depth="6" pos="37,-12" width="66" height="23" font_size="18" text="Remove" pivot="center" justify="center" /></button>
+        </rect>
+        <rect name="machineOverview" visible="{workshop_machines_visible}" />
+        <label depth="4" pos="419,-286" width="572" height="114" font_size="22" text="{workshop_empty_text}" name="workshopEmptyLabel" visible="{workshop_empty}" justify="center" color="[lightGrey]" />
+        <button name="workshopPagePrevious" pos="386,-600" width="36" height="30" depth="5" sprite="menu_empty" style="press, hover" enabled="{workshop_page_previous_ready}" disabledcolor="[darkGrey]" defaultcolor="80,80,80,255" hovercolor="110,110,110,255" hoverscale="1" sound="[paging_click]"><label depth="6" pos="18,-15" width="28" height="28" font_size="18" text="&lt;" pivot="center" justify="center" /></button>
+        <label depth="4" pos="435,-604" width="142" height="23" font_size="16" text="{workshop_page}" name="workshopPageLabel" justify="center" color="[lightGrey]" />
+        <button name="workshopPageNext" pos="590,-600" width="36" height="30" depth="5" sprite="menu_empty" style="press, hover" enabled="{workshop_page_next_ready}" disabledcolor="[darkGrey]" defaultcolor="80,80,80,255" hovercolor="110,110,110,255" hoverscale="1" sound="[paging_click]"><label depth="6" pos="18,-15" width="28" height="28" font_size="18" text="&gt;" pivot="center" justify="center" /></button>
+        <label depth="4" pos="650,-603" width="374" height="25" font_size="16" text="{workshop_list_hint}" visible="{workshop_info_visible}" justify="right" color="[lightGrey]" />
+        <button name="workshopClearDone" pos="844,-600" width="180" height="30" depth="5" sprite="menu_empty" style="press, hover" defaultcolor="80,80,80,255" hovercolor="110,110,110,255" hoverscale="1" sound="[paging_click]" visible="{workshop_archive_visible}" tooltip="Archive finished requests from older versions. New requests are archived automatically after collection."><label depth="6" pos="90,-15" width="174" height="28" font_size="16" text="ARCHIVE FINISHED" pivot="center" justify="center" /></button>
+      </rect>
+      <rect name="workshopOptions" visible="{workshop_settings_visible}" pos="386,-138" width="638" height="470">
+        <sprite depth="2" sprite="menu_empty" type="sliced" fillcenter="true" pos="0,0" width="638" height="470" color="[darkGrey]" />
+        <sprite depth="3" sprite="menu_empty3px" type="sliced" fillcenter="false" pos="0,0" width="638" height="470" color="[black]" />
+        <label depth="4" pos="20,-18" width="580" height="32" font_size="22" text="AUTOMATION OPTIONS" />
+        <label depth="4" pos="20,-63" width="452" height="28" font_size="22" text="Automatic fuel &amp; collector supplies"  />
+        <button name="workshopFuel" pos="520,-60" width="98" height="33" depth="5" sprite="menu_empty" style="press, hover" defaultcolor="80,80,80,255" hovercolor="110,110,110,255" hoverscale="1" sound="[paging_click]"><label depth="6" pos="49,-16" width="90" height="31" font_size="18" text="{workshop_fuel}" pivot="center" justify="center" /></button>
+        <label depth="4" pos="20,-99" width="592" height="56" font_size="18" text="Uses wood for fires, jars for water and native collector inputs.&#10;Fires turn off when crafting and smelting are idle." color="[lightGrey]" />
+        <label depth="4" pos="20,-178" width="452" height="28" font_size="22" text="Craft missing ingredients"  />
+        <button name="workshopAutoCraft" pos="520,-175" width="98" height="33" depth="5" sprite="menu_empty" style="press, hover" defaultcolor="80,80,80,255" hovercolor="110,110,110,255" hoverscale="1" sound="[paging_click]"><label depth="6" pos="49,-16" width="90" height="31" font_size="18" text="{workshop_autocraft}" pivot="center" justify="center" /></button>
+        <label depth="4" pos="20,-215" width="592" height="56" font_size="18" text="Crafts missing ingredients. Shares work by estimated finish time.&#10;Balances forge inputs and applies installed tool bonuses." color="[lightGrey]" />
+        <label depth="4" pos="20,-293" width="592" height="67" font_size="18" text="Place tools, bees and chickens in their machines yourself.&#10;Automation runs in loaded areas while you play solo.&#10;Use the Machines tab to exclude a machine." color="[lightGrey]" />
+        <button name="workshopLink" pos="20,-388" width="260" height="36" depth="5" sprite="menu_empty" style="press, hover" defaultcolor="80,80,80,255" hovercolor="110,110,110,255" hoverscale="1" sound="[paging_click]" visible="{workshop_link_visible}" tooltip="Only needed for a separate Workshop Controller. Relinking pauses it."><label depth="6" pos="130,-18" width="252" height="34" font_size="18" text="RELINK STORAGE CONSOLE" pivot="center" justify="center" /></button>
+        <label depth="4" pos="20,-438" width="592" height="28" font_size="16" text="Pausing never cancels work already queued in a machine." color="[lightGrey]" />
+      </rect>
+      <sprite depth="2" sprite="menu_empty3px" type="sliced" fillcenter="false" pos="386,-642" width="638" height="66" color="[black]" />
+      <label depth="4" pos="399,-650" width="612" height="48" font_size="16" text="{workshop_status}" name="workshopNotice" max_line_count="2" overflow="shrinkcontent" tooltip="{workshop_status}" color="[lightGrey]" />
+    </window>
     <window name="nearbyCraftLoadoutLocker" width="606" height="438" panel="Left" cursor_area="true">
       <rect name="header" height="43" depth="1">
         <headerbg />
@@ -52,12 +207,13 @@
         <label depth="3" pos="12,-10" width="582" height="25" text="{loadout_network_status}" font_size="18" justify="center" color="[lightGrey]" />
       </rect>
     </window>
-    <window name="nearbyCraftStorageTerminal" width="606" height="590" panel="Left" cursor_area="true">
+    <window name="nearbyCraftStorageTerminal" width="606" height="653" panel="Left" cursor_area="true">
       <rect name="header" height="43" depth="1">
         <headerbg />
         <sprite depth="3" name="windowIcon" style="icon32px" pivot="center" pos="21,-21" sprite="ui_game_symbol_computer" />
-        <label depth="3" name="windowName" pos="42,-6" width="360" height="32" text="STORAGE NETWORK CONSOLE" font_size="28" />
-        <label depth="3" name="resultCount" pos="484,-9" width="106" height="28" text="{terminal_result_count} STACKS" font_size="20" justify="right" color="[lightGrey]" />
+        <label depth="3" name="windowName" pos="42,-6" width="252" height="32" text="NEARBYCRAFT / STORAGE" font_size="22" />
+        <button name="nearbyCraftTerminalProduction" pos="301,-5" width="143" height="33" depth="4" sprite="menu_empty" style="press, hover" defaultcolor="43,64,72,255" hovercolor="65,108,119,255" hoverscale="1" sound="[paging_click]" tooltip="Open orders and machine management for this network. Put down any cursor stack first."><label pos="71,-16" width="139" height="31" pivot="center" justify="center" font_size="18" text="PRODUCTION" /></button>
+        <label depth="3" name="resultCount" pos="454,-9" width="140" height="28" text="{terminal_result_count} ENTRIES" font_size="18" justify="right" color="[lightGrey]" />
       </rect>
 
       <rect name="searchControls" pos="0,-46" width="606" height="50" depth="2">
@@ -65,16 +221,28 @@
         <sprite depth="8" name="toolbarBorder" sprite="menu_empty3px" pos="0,1" width="606" height="50" color="[black]" type="sliced" fillcenter="false" />
 
         <sprite depth="4" name="searchIcon" style="icon30px" pos="18,-24" sprite="ui_game_symbol_search" pivot="center" />
-        <textfield depth="5" pos="39,-9" width="185" height="30" name="nearbyCraftTerminalSearch" search_field="true" clear_button="true" character_limit="64" />
+        <textfield depth="5" pos="39,-9" width="300" height="30" name="nearbyCraftTerminalSearch" search_field="true" clear_button="true" character_limit="64" />
 
-        <label depth="4" pos="229,-14" width="91" height="28" text="AUTO FOCUS" font_size="15" justify="right" color="{terminal_autofocus_color}" />
-        <button depth="5" name="nearbyCraftTerminalAutoFocus" pos="339,-24" sprite="ui_game_symbol_search" style="icon30px, press, hover" pivot="center" selected="{terminal_autofocus_enabled}" defaultcolor="[disabledLabelColor]" selectedcolor="[green]" tooltip="{terminal_autofocus_tooltip}" sound="[paging_click]" />
-        <label depth="4" pos="357,-13" width="70" height="28" text="{terminal_sort}" font_size="17" justify="right" color="[lightGrey]" />
-        <button depth="5" name="nearbyCraftTerminalSort" pos="447,-24" sprite="ui_game_symbol_sort" style="icon30px, press, hover" pivot="center" tooltip="Change and save sorting" sound="[paging_click]" />
+        <label depth="4" pos="347,-14" width="108" height="28" text="AUTO FOCUS" font_size="15" justify="right" color="{terminal_autofocus_color}" />
+        <button depth="5" name="nearbyCraftTerminalAutoFocus" pos="478,-24" sprite="ui_game_symbol_search" style="icon30px, press, hover" pivot="center" selected="{terminal_autofocus_enabled}" defaultcolor="[disabledLabelColor]" selectedcolor="[green]" tooltip="{terminal_autofocus_tooltip}" sound="[paging_click]" />
         <button depth="5" name="nearbyCraftTerminalRefresh" pos="558,-24" sprite="ui_game_symbol_computer" style="icon30px, press, hover" pivot="center" tooltip="Rescan connected storage" sound="[paging_click]" />
       </rect>
 
-      <rect name="nearbyCraftTerminalScrollArea" pos="0,-99" height="402" depth="0" on_scroll="true">
+      <rect name="quickSortControls" pos="0,-99" width="606" height="36" depth="2">
+        <sprite depth="1" color="[darkGrey]" type="sliced" width="606" height="36" />
+        <label depth="3" pos="8,-8" width="92" height="24" text="QUICK SORT" font_size="16" />
+        <button depth="4" name="nearbyCraftTerminalSort" pos="104,-2" width="154" height="32" sprite="menu_empty" defaultcolor="{terminal_sort_name_color}" hovercolor="95,125,100,255" hoverscale="1" style="press, hover" tooltip="Sort entries by name A-Z. View only: does not move chest contents." sound="[paging_click]">
+          <label depth="1" pos="77,-16" width="152" height="30" pivot="center" justify="center" font_size="18" text="NAME A-Z" />
+        </button>
+        <button depth="4" name="nearbyCraftTerminalSortCount" pos="264,-2" width="170" height="32" sprite="menu_empty" defaultcolor="{terminal_sort_count_color}" hovercolor="95,125,100,255" hoverscale="1" style="press, hover" tooltip="Sort by total quantity across connected chests, largest first." sound="[paging_click]">
+          <label depth="1" pos="85,-16" width="168" height="30" pivot="center" justify="center" font_size="18" text="MOST ITEMS" />
+        </button>
+        <button depth="4" name="nearbyCraftTerminalSortType" pos="440,-2" width="160" height="32" sprite="menu_empty" defaultcolor="{terminal_sort_type_color}" hovercolor="95,125,100,255" hoverscale="1" style="press, hover" tooltip="Group entries by the game's item type ID. Variants keep their own entries." sound="[paging_click]">
+          <label depth="1" pos="80,-16" width="158" height="30" pivot="center" justify="center" font_size="18" text="ITEM TYPE" />
+        </button>
+      </rect>
+
+      <rect name="nearbyCraftTerminalScrollArea" pos="0,-138" height="402" depth="0" on_scroll="true">
         <sprite depth="8" name="backgroundMain" sprite="menu_empty3px" width="606" height="402" color="[black]" type="sliced" fillcenter="false" on_press="true" snap="false" gamepad_selectable="false" />
         <grid depth="10" name="nearbyCraftTerminalGrid" rows="6" cols="9" pos="3,-3" cell_width="65" cell_height="65" repeat_content="true" controller="NearbyCraft.XUiC_StorageTerminalGrid, NearbyCraft">
           <item_stack name="0" cell_size="65" controller="NearbyCraft.XUiC_StorageTerminalItemStack, NearbyCraft" />
@@ -85,14 +253,14 @@
         </scrollbar>
       </rect>
 
-      <rect name="footer" pos="0,-504" width="606" height="44" depth="2">
+      <rect name="footer" pos="0,-543" width="606" height="44" depth="2">
         <sprite depth="1" color="[darkGrey]" type="sliced" width="606" height="44" />
         <label depth="3" name="networkStatus" pos="12,-10" width="420" height="25" text="{terminal_status}" font_size="18" color="[lightGrey]" />
         <button depth="4" name="nearbyCraftTerminalScrollUp" pos="450,-22" sprite="ui_game_symbol_arrow_left" rotation="90" style="icon30px, press, hover" pivot="center" enabled="{terminal_can_scroll_up}" disabledcolor="[darkGrey]" tooltip="Scroll up one row" sound="[paging_click]" />
         <label depth="3" name="scrollRange" pos="466,-10" width="105" height="25" text="{terminal_scroll_range}" font_size="16" justify="center" />
         <button depth="4" name="nearbyCraftTerminalScrollDown" pos="590,-22" sprite="ui_game_symbol_arrow_left" rotation="-90" style="icon30px, press, hover" pivot="center" enabled="{terminal_can_scroll_down}" disabledcolor="[darkGrey]" tooltip="Scroll down one row" sound="[paging_click]" />
       </rect>
-      <rect name="supplyControls" pos="0,-552" width="606" height="38" depth="2">
+      <rect name="supplyControls" pos="0,-591" width="606" height="38" depth="2">
         <sprite depth="1" color="[darkGrey]" type="sliced" width="606" height="38" />
         <button depth="4" name="nearbyCraftTerminalDeposit" pos="5,-3" width="165" height="32" sprite="menu_empty" defaultcolor="45,85,45,255" hovercolor="65,115,65,255" hoverscale="1" style="press, hover" tooltip="Deposit backpack supplies INCLUDING locked backpack slots. Keeps toolbelt and personal reserves. Chest locks still apply." sound="[paging_click]">
           <label depth="1" pos="82,-16" pivot="center" width="163" height="30" text="DEPOSIT ALL" justify="center" font_size="20" />
@@ -107,6 +275,7 @@
           <label depth="1" pos="66,-16" pivot="center" width="131" height="30" text="CLEAR KEEP" justify="center" font_size="19" />
         </button>
       </rect>
+      <label depth="3" name="aggregateHint" pos="8,-633" width="590" height="20" font_size="14" text="Totals shown / Click or Shift-click: one stack / Right-click: half a stack" color="[lightGrey]" />
     </window>
   </append>
 </configs>

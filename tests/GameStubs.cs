@@ -1,6 +1,14 @@
 // Deliberately minimal model: tests exercise the production planner, not Unity,
 // native cursor handling, networking or the game's ItemValue implementation.
-public sealed class ItemClass
+public sealed class PackedBoolArray
+{
+    private readonly bool[] values;
+    public PackedBoolArray(int length) { values = new bool[length]; }
+    public int Length => values.Length;
+    public bool this[int index] { get => values[index]; set => values[index] = value; }
+}
+
+public sealed partial class ItemClass
 {
     public int MaxCount = 100;
     public bool CanStore = true;
@@ -8,7 +16,7 @@ public sealed class ItemClass
     public bool CanStack() => MaxCount > 1;
 }
 
-public sealed class ItemValue
+public sealed partial class ItemValue
 {
     public int type;
     public int Metadata;
@@ -25,7 +33,7 @@ public sealed class ItemValue
     public override int GetHashCode() => HashCode.Combine(type, Metadata);
 }
 
-public sealed class ItemStack
+public sealed partial class ItemStack
 {
     public ItemValue itemValue;
     public int count;

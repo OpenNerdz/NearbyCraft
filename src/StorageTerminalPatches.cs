@@ -77,8 +77,9 @@ namespace NearbyCraft
             if (__instance is XUiC_StorageTerminalItemStack)
             {
                 ItemStack requested = __instance.ItemStack.Clone();
-                if (!requested.CanMoveTo(XUiC_ItemStack.StackLocationTypes.Backpack)
-                    || !requested.CanMoveTo(XUiC_ItemStack.StackLocationTypes.ToolBelt)) return false;
+                if (!TerminalRules.CanShiftToInventory(
+                    requested.CanMoveTo(XUiC_ItemStack.StackLocationTypes.Backpack),
+                    requested.CanMoveTo(XUiC_ItemStack.StackLocationTypes.ToolBelt))) return false;
                 int withdrawn = session.Withdraw(requested, requested.count);
                 if (withdrawn <= 0)
                 {

@@ -5,3 +5,6 @@ dist/
 *.suo
 __pycache__/
 *.pyc
+gameplay-qa*.log
+qa-userdata/
+/vkd3d-proton.cache.write

@@ -80,16 +80,24 @@ namespace NearbyCraft
             return false;
         }
 
+        internal int InventoryCount { get { return inventories.Count; } }
+
+        // Read-only copies for callers that must stage a native inventory setter
+        // before committing the storage arrays. Exposing clones keeps the plan's
+        // validation snapshots private and prevents callers from changing them.
+        internal ItemStack[] GetBefore(int index)
+        {
+            return ItemStack.Clone(inventories[index].Before);
+        }
+
+        internal ItemStack[] GetAfter(int index)
+        {
+            return ItemStack.Clone(inventories[index].After);
+        }
+
         internal bool TryCommit(Func<int, bool> sourceStillValid)
         {
-            if (committed) return false;
-            for (int n = 0; n < inventories.Count; n++)
-            {
-                Inventory inventory = inventories[n];
-                if (!sourceStillValid(n) || inventory.Live.Length != inventory.Before.Length) return false;
-                for (int i = 0; i < inventory.Live.Length; i++)
-                    if (!Equal(inventory.Live[i], inventory.Before[i])) return false;
-            }
+            if (!CanCommit(sourceStillValid)) return false;
             // All checks precede all writes. Only changed slots are replaced.
             for (int n = 0; n < inventories.Count; n++)
             {
@@ -99,6 +107,19 @@ namespace NearbyCraft
                         inventory.Live[i] = inventory.After[i];
             }
             committed = true;
+            return true;
+        }
+
+        internal bool CanCommit(Func<int, bool> sourceStillValid)
+        {
+            if (committed || sourceStillValid == null) return false;
+            for (int n = 0; n < inventories.Count; n++)
+            {
+                Inventory inventory = inventories[n];
+                if (!sourceStillValid(n) || inventory.Live.Length != inventory.Before.Length) return false;
+                for (int i = 0; i < inventory.Live.Length; i++)
+                    if (!Equal(inventory.Live[i], inventory.Before[i])) return false;
+            }
             return true;
         }
 

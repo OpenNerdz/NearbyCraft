@@ -3,12 +3,15 @@
     <OutputType>Exe</OutputType>
     <TargetFramework>net8.0</TargetFramework>
     <EnableDefaultCompileItems>false</EnableDefaultCompileItems>
+    <ImplicitUsings>enable</ImplicitUsings>
     <GamePath Condition="'$(GamePath)' == ''">/home/brad/.local/share/Steam/steamapps/common/7 Days To Die</GamePath>
   </PropertyGroup>
   <ItemGroup>
-    <Compile Include="PatchSites.cs" />
-    <Reference Include="Mono.Cecil">
-      <HintPath>$(GamePath)/Mods/0_TFP_Harmony/Mono.Cecil.dll</HintPath>
+    <Compile Include="WorkshopStoreTests.cs" />
+    <Compile Include="../src/WorkshopStore.cs" Link="WorkshopStore.cs" />
+    <Compile Include="../src/WorkshopRules.cs" Link="WorkshopRules.cs" />
+    <Reference Include="Newtonsoft.Json">
+      <HintPath>$(GamePath)/7DaysToDie_Data/Managed/Newtonsoft.Json.dll</HintPath>
     </Reference>
   </ItemGroup>
 </Project>

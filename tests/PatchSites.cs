@@ -66,5 +66,41 @@ foreach (var (typeName, methodName, parameterCount) in requiredLoadoutMethods) {
     total++;
     if (!found) failed++;
 }
+foreach (var (typeName, methodName, parameterCount) in new[] {
+    ("BlockCompositeTileEntity", "OnBlockRemoved", 4),
+    ("TileEntityWorkstation", "ResetTickTime", 0),
+    ("TileEntityWorkstation", "hasRecipeInQueue", 0),
+    ("Recipe", "IsUnlocked", 1),
+    ("XUiM_Recipes", "FilterRecipesByWorkstation", 2),
+    ("GameManager", "IsPaused", 0),
+    ("ItemClass", "GetFuelValue", 1),
+    ("ItemClass", "GetWeight", 0),
+    ("TileEntityWorkstation", "AcceptsMaterial", 1),
+    ("TileEntityWorkstation", "HandleMaterialInput", 1),
+    ("TileEntityWorkstation", "GetTimerForSlot", 1),
+    ("TileEntityCollector", "IsCurrentStack", 1),
+    ("TileEntityCollector", "getCurrentConvertCount", 1),
+    ("TileEntityCollector", "fuelCost", 2),
+    ("BlockCollector", "UsesFuel", 0),
+    ("BlockCollector", "GetFuelType", 1),
+    ("BlockCollector", "GetSandboxModifiedFuelNeeded", 1),
+}) {
+    bool found = module.GetTypes().Where(t => t.Name == typeName)
+        .Any(t => t.Methods.Any(m => m.Name == methodName && m.Parameters.Count == parameterCount));
+    Console.WriteLine($"{(found ? "PASS" : "FAIL")} Workshop API: {typeName}.{methodName}/{parameterCount}");
+    total++;
+    if (!found) failed++;
+}
+foreach (var (typeName, fieldName) in new[] {
+    ("RecipeQueueItem", "Recipe"), ("RecipeQueueItem", "Multiplier"),
+    ("RecipeQueueItem", "StartingEntityId"), ("ModEvents", "GameUpdate"),
+    ("EffectManager", "slotsCached"), ("EffectManager", "slotsQueriedFrame"), ("EffectManager", "slotsQueriedForEntity"),
+    ("ItemClass", "MeltTimePerUnit"),
+}) {
+    bool found = module.GetTypes().Where(t => t.Name == typeName).Any(t => t.Fields.Any(f => f.Name == fieldName));
+    Console.WriteLine($"{(found ? "PASS" : "FAIL")} Workshop state: {typeName}.{fieldName}");
+    total++;
+    if (!found) failed++;
+}
 Console.WriteLine($"Patch checks: {total - failed}/{total} passed (metadata only; not a runtime Harmony test)");
 Environment.ExitCode = failed == 0 ? 0 : 1;
